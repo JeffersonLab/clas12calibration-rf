@@ -1,6 +1,7 @@
 package org.clas.viewer;
 
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,7 +29,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.KeyStroke;
+import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -45,7 +46,6 @@ import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
-import org.jlab.elog.LogEntry; 
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataSource;
 
@@ -70,17 +70,24 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
     private int canvasUpdateTime   = 2000;
     private int analysisUpdateTime = 100;
     private int moduleSelect       = 0;
-    private int runNumber  = 0;
+    private int runNumber   = 0;
+    private int eventNumber = 0;
     String workDir         = null;
     
     public String outPath = ".";
     
     // detector monitors
     DetectorMonitor[] monitors = {
-                new RFsignals("rfSignals"),         
-                new RFoffsets("rfOffsets")          
+                new RFoffsets("rfOffsets"),         
+                new RFsignals("rfSignals")          
     };
-        
+
+    private double tdc2time = 0.023436;
+    private double rfbucket = 4.008;
+    private int    ncycles  = 40;
+    private int    rfid     = 1;
+
+    
     public CalibrationViewer() {    	
         		
         this.workDir = System.getProperty("user.dir");
@@ -146,8 +153,14 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         histo.add(menuItem);
         this.menuBar.add(histo);                
 
+        JMenu settings = new JMenu("Settings");
+        menuItem = new JMenuItem("Set RF parameters...");
+        menuItem.getAccessibleContext().setAccessibleDescription("Set RF signal parameters");
+        menuItem.addActionListener(this);
+        settings.add(menuItem);        
+        this.menuBar.add(settings);                
+
         JMenu table = new JMenu("Table");
-        table.setMnemonic(KeyEvent.VK_A);
         table.getAccessibleContext().setAccessibleDescription("Table operations");
         menuItem = new JMenuItem("Save table...");
         menuItem.getAccessibleContext().setAccessibleDescription("Save table content to file");
@@ -155,6 +168,10 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         table.add(menuItem);
         menuItem = new JMenuItem("Clear table");
         menuItem.getAccessibleContext().setAccessibleDescription("Clear table content");
+        menuItem.addActionListener(this);
+        table.add(menuItem);
+        menuItem = new JMenuItem("Update table");
+        menuItem.getAccessibleContext().setAccessibleDescription("Update table content");
         menuItem.addActionListener(this);
         table.add(menuItem);
         menuBar.add(table);
@@ -321,7 +338,18 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                 this.monitors[k].resetTable();
             }
         }                     
-        if(e.getActionCommand() == "View all") {
+        if(e.getActionCommand()=="Update table") {
+            for(int k=0; k<this.monitors.length; k++) {
+                this.monitors[k].updateTable();
+            }
+        }                     
+        if(e.getActionCommand()=="Set RF parameters...") {
+            this.setAnalysisParameters();
+            for(int k=0; k<this.monitors.length; k++) {
+                this.monitors[k].setAnalysisParameters(this.rfbucket,this.ncycles,this.tdc2time,this.rfid);
+            }
+        }
+         if(e.getActionCommand() == "View all") {
             this.monitors[moduleSelect].showPlots();
         }        
     }
@@ -402,7 +430,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         		
         HipoDataEvent hipo = null;
         
-	    if(event!=null ){
+        if(event!=null ){
             //event.show();
 
             if(event instanceof EvioDataEvent){
@@ -414,9 +442,15 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                 hipo = (HipoDataEvent) event;    
             }
             
-            if(this.getRunNumber(event)!=0 && this.runNumber != this.getRunNumber(event)) {
-//                this.saveToFile("mon12_histo_run_" + runNumber + ".hipo");
-                this.runNumber = this.getRunNumber(event);
+            int rNum = this.runNumber;
+            int eNum = this.eventNumber;
+            if(event.hasBank("RUN::config")) {
+                DataBank bank = event.getBank("RUN::config");
+                 rNum      = bank.getInt("run", 0);
+                 eNum      = bank.getInt("event", 0);
+            }
+            if(rNum!=0 && this.runNumber != rNum) {
+                this.runNumber = rNum;
                 for(int k=0; k<this.monitors.length; k++) {
                     this.monitors[k].setRunNumber(this.runNumber);
                 }
@@ -424,7 +458,11 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                     this.monitors[k].createHistos(this.runNumber);
                     this.monitors[k].plotHistos(this.runNumber);
                 }
-            }            
+            } 
+            this.eventNumber = eNum;
+            for(int k=0; k<this.monitors.length; k++) {
+                this.monitors[k].setEventNumber(this.eventNumber);
+            }
             
             for(int k=0; k<this.monitors.length; k++) {
 //                this.monitors[k].setTriggerPhase(getTriggerPhase(hipo));
@@ -451,7 +489,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
     
     public void printHistosToFile() {
         DateFormat df = new SimpleDateFormat("MM-dd-yyyy_hh.mm.ss_aa");
-        String data = outPath + "/output" + "/rfCalib_" + this.runNumber + "_" + df.format(new Date());        
+        String data = outPath + "/rfCalib_" + df.format(new Date());        
         File theDir = new File(data);
         // if the directory does not exist, create it
         if (!theDir.exists()) {
@@ -586,6 +624,52 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         dir.writeFile(fileName);
     }
         
+    public void setAnalysisParameters() {
+
+        JTextField rfFrequency = new JTextField(5);
+	JTextField rfCycles    = new JTextField(5);
+	JTextField tdc2Time    = new JTextField(5);
+	JTextField rfID        = new JTextField(5);
+	
+        
+	JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(4,2));            
+           
+        panel.add(new JLabel("RF period"));
+        rfFrequency.setText(Double.toString(this.rfbucket));
+        panel.add(rfFrequency);
+        panel.add(new JLabel("RF cycles"));
+        rfCycles.setText(Integer.toString(this.ncycles));
+        panel.add(rfCycles);
+        panel.add(new JLabel("TRC2time"));
+        tdc2Time.setText(Double.toString(this.tdc2time));
+        panel.add(tdc2Time);
+        panel.add(new JLabel("RF primary ID"));
+        rfID.setText(Integer.toString(this.rfid));
+        panel.add(rfID);
+        
+        int result = JOptionPane.showConfirmDialog(null, panel, "Analysis parameters", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {        
+            if (!rfFrequency.getText().isEmpty()) {
+                this.rfbucket = Double.parseDouble(rfFrequency.getText());
+            } 
+            if (!rfCycles.getText().isEmpty()) {
+                this.ncycles = Integer.parseInt(rfCycles.getText());
+            } 
+            if (!tdc2Time.getText().isEmpty()) {
+                this.tdc2time = Double.parseDouble(tdc2Time.getText());
+            } 
+            if (!rfID.getText().isEmpty()) {
+                this.rfid = Integer.parseInt(rfID.getText());
+            } 
+            System.out.println("RF analysis paramters");
+            System.out.println("\n\tRF period: " + this.rfbucket);
+            System.out.println("\n\tRF cycles: " + this.ncycles);
+            System.out.println("\n\tTDC-to-time conversion factor: " + this.tdc2time);
+            System.out.println("\n\tRF primary sifnal IDr: " + this.rfid);
+        }
+    }
+    
     public void setCanvasUpdate(int time) {
         System.out.println("Setting " + time + " ms update interval");
         this.canvasUpdateTime = time;
@@ -600,7 +684,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         if(this.tabbedpane.getSelectedIndex()<this.monitors.length) {
             this.moduleSelect = this.tabbedpane.getSelectedIndex();
         }
-        System.out.println("Tab changed to " + sourceTabbedPane.getTitleAt(index) + " with module index " + this.moduleSelect);
+//        System.out.println("Tab changed to " + sourceTabbedPane.getTitleAt(index) + " with module index " + this.moduleSelect);
     }
     
     @Override

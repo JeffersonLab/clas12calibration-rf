@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package or.clas.tools;
+package org.clas.tools;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

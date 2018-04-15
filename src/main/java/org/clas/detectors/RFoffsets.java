@@ -1,6 +1,7 @@
 package org.clas.detectors;
 
 import java.util.ArrayList;
+import org.clas.tools.AdjustFit;
 import org.clas.viewer.DetectorMonitor;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.physics.Particle;
@@ -15,12 +16,23 @@ import org.jlab.io.base.DataEvent;
 
 public class RFoffsets extends DetectorMonitor {
 
-    private double rfbucket = 4.008;
 
     public RFoffsets(String name) {
         super(name);
         this.setDetectorTabNames("RF Offsets");
         this.init("RF1offset:\u03B4(RF1offset):RF1sigma:\u03B4(RF1sigma):RF2offset:\u03B4(RF2offset):RF2sigma:\u03B4(RF2sigma)");
+    }
+
+    @Override
+    public void adjustFit() {
+        int run = this.getViewRun();
+        if(run==0) run = this.getRunNumber();
+        System.out.println("Adjusting fit for run " + run);
+        H1F hrf = this.getDataGroup().getItem(0, 0, run).getH1F("rf" + this.rfid + "center_" + run);
+        F1D fun  = this.getDataGroup().getItem(0, 0, run).getF1D("f" + this.rfid + "_" + run);
+        AdjustFit cfit = new AdjustFit(hrf, fun, "LRQ");
+        this.getDetectorCanvas().getCanvas("RF Offsets").update();
+        this.updateTable(run);
     }
 
     @Override
@@ -179,10 +191,10 @@ public class RFoffsets extends DetectorMonitor {
             }
         }
     }
-
+    
     @Override
     public void setCanvasBookData() {
-        this.getCanvasBook().setData(this.getDataGroup(), 0);
+        this.getCanvasBook().setData(this.getDataGroup(), this.rfid-1);
     }
     
     @Override
@@ -205,25 +217,7 @@ public class RFoffsets extends DetectorMonitor {
             this.getCalibrationTable().addEntry(0, 0, this.getRunNumber());
         }
 
-        double rf1mean = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).getParameter(1);
-        double rf1meanerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).parameter(1).error();
-        double rf1sigma = Math.abs(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).getParameter(2));
-        double rf1sigmaerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).parameter(2).error();
-        double rf2mean = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).getParameter(1);
-        double rf2meanerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).parameter(1).error();
-        double rf2sigma = Math.abs(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).getParameter(2));
-        double rf2sigmaerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).parameter(2).error();
-
-        this.getCalibrationTable().setDoubleValue(rf1mean, "RF1offset", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf1meanerror, "\u03B4(RF1offset)", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf1sigma, "RF1sigma", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf1sigmaerror, "\u03B4(RF1sigma)", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf2mean, "RF2offset", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf2meanerror, "\u03B4(RF2offset)", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf2sigma, "RF2sigma", 0, 0, this.getRunNumber());
-        this.getCalibrationTable().setDoubleValue(rf2sigmaerror, "\u03B4(RF2sigma)", 0, 0, this.getRunNumber());
-        getCalibrationTable().fireTableDataChanged();
-
+        this.updateTable(run);
     }
 
     @Override
@@ -293,4 +287,26 @@ public class RFoffsets extends DetectorMonitor {
         hirfcenter.setFunction(null);
     }
 
+    @Override
+    public void updateTable(int run) {
+        double rf1mean = this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).getParameter(1);
+        double rf1meanerror = this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).parameter(1).error();
+        double rf1sigma = Math.abs(this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).getParameter(2));
+        double rf1sigmaerror = this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).parameter(2).error();
+        double rf2mean = this.getDataGroup().getItem(0, 0,run).getF1D("f2_"+run).getParameter(1);
+        double rf2meanerror = this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run).parameter(1).error();
+        double rf2sigma = Math.abs(this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run).getParameter(2));
+        double rf2sigmaerror = this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run).parameter(2).error();
+
+        this.getCalibrationTable().setDoubleValue(rf1mean, "RF1offset", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf1meanerror, "\u03B4(RF1offset)", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf1sigma, "RF1sigma", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf1sigmaerror, "\u03B4(RF1sigma)", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf2mean, "RF2offset", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf2meanerror, "\u03B4(RF2offset)", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf2sigma, "RF2sigma", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(rf2sigmaerror, "\u03B4(RF2sigma)", 0, 0, run);
+        getCalibrationTable().fireTableDataChanged();   
+        System.out.println(rf1mean);
+    }
 }

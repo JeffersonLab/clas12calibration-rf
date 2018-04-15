@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package or.clas.tools;
+package org.clas.tools;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -87,10 +87,20 @@ public class AdjustFit {
         for(int i=0; i<this.pars.size(); i++){
             this.err_pars.add(this.newfct.parameter(i).error());
         }
-        this.newfct.setLineColor(3);
+        this.newfct.setLineColor(6);
         
     }
 
+    public void savefun() {
+        int npar = fct.getNPars();
+        for(int i=0; i<npar; i++){   
+           this.fct.setParameter(i, newfct.getParameter(i));
+           this.fct.parameter(i).setError(newfct.parameter(i).error());
+           this.fct.setRange(this.newfct.getMin(),this.newfct.getMax());
+        }
+        System.out.println(newfct.getParameter(1));
+    }
+    
     private final class CustomPanel2 extends JPanel {
         JLabel label;
         JPanel panel;
@@ -110,19 +120,20 @@ public class AdjustFit {
                 JLabel l = new JLabel(newfct.parameter(i).name(), JLabel.TRAILING);
                 panel.add(l);
                 params[i] = new JTextField(5);
-                params[i].setText(String.format("%.3f", fct.getParameter(i)));
+                params[i].setText(String.format("%.4f", fct.getParameter(i)));
                 panel.add(params[i]);
             }
             panel.add(new JLabel("Fit range minimum"));
-            minRange.setText(Double.toString(fct.getRange().getMin()));
+            minRange.setText(String.format("%.3f", fct.getRange().getMin()));
             panel.add(minRange);
             panel.add(new JLabel("Fit range maximum"));
-            maxRange.setText(Double.toString(fct.getRange().getMax()));
+            maxRange.setText(String.format("%.3f", fct.getRange().getMax()));
             panel.add(maxRange);
             fitButton = new JButton("Fit");
             fitButton.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     refit();
+                    savefun();
                     return;
                 }
             });

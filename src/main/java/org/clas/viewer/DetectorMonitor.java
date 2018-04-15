@@ -1,6 +1,6 @@
 package org.clas.viewer;
 
-import or.clas.tools.CanvasBook;
+import org.clas.tools.CanvasBook;
 import java.awt.BorderLayout;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -55,8 +55,15 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     public boolean TriggerBeam[] = new boolean[32];
     public int TriggerMask = 0;
     
-    private int runNumber  = 0;
+    private int runNumber   = 0;
+    private int eventNumber = 0;
+    private int viewRun     = 0;
     
+    public double tdc2time = 0.023436;
+    public double rfbucket = 4.008;
+    public int    ncycles  = 40;
+    public int    rfid     = 1;
+    public double period   = rfbucket*ncycles;
     
     public DetectorMonitor(String name){
         GStyle.getAxisAttributesX().setTitleFontSize(18);
@@ -104,6 +111,7 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
         int component = Integer.parseInt(str_component);
         
         this.plotHistos(component);
+        this.viewRun = component;
     }
     
     public void createHistos(int run) {
@@ -217,8 +225,16 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
         return numberOfEvents;
     }
 
+    public int getEventNumber() {
+        return eventNumber;
+    }
+
     public int getRunNumber() {
         return runNumber;
+    }
+
+    public int getViewRun() {
+        return viewRun;
     }
     
     public void fillSummary() {
@@ -255,8 +271,10 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     
     public void printCanvas(String dir) {
         // print canvas to files
+        int run = this.getViewRun();
+        if(run==0) run = this.getRunNumber();
         for(int tab=0; tab<this.detectorTabNames.size(); tab++) {
-            String fileName = dir + "/" + this.monitorName + "_canvas" + tab + ".png";
+            String fileName = dir + "/" + this.monitorName + "_" + run + "_canvas" + tab + ".png";
             System.out.println(fileName);
             this.detectorCanvas.getCanvas(this.detectorTabNames.get(tab)).save(fileName);
         }
@@ -264,12 +282,9 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     
     @Override
     public void resetEventListener() {
-        System.out.println("Resetting " + this.getName() + " histogram");
-        this.resetHistos();
-        this.createSummary();
+        System.out.println("Resetting " + this.getName() + " histogram for run " + this.getRunNumber());
         this.createHistos(this.getRunNumber());
         this.plotHistos(this.getRunNumber());
-        this.resetTable();
     }
     
     
@@ -308,6 +323,10 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     
     public void setNumberOfEvents(int numberOfEvents) {
         this.numberOfEvents = numberOfEvents;
+    }
+
+    public void setEventNumber(int eventNumber) {
+        this.eventNumber = eventNumber;
     }
 
     public void setRunNumber(int runNumber) {
@@ -382,6 +401,28 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
             // Or we could just do this: 
             ex.printStackTrace();
         }
+    }
+    
+    public void updateTable() {
+
+        for (int i = 0; i < this.calibConstants.getRowCount(); i++) {
+            String line = new String();
+            line = line + this.calibConstants.getValueAt(i, 2);
+            int run = Integer.parseInt(line);
+            this.updateTable(run);
+        }
+    }
+    
+    public void updateTable(int run) {
+
+     }
+
+    public void setAnalysisParameters(double rfbucket, int ncycles, double tdc2time, int rfid) {
+        this.rfbucket = rfbucket;
+        this.ncycles  = ncycles;
+        this.tdc2time = tdc2time;
+        this.rfid     = rfid;
+        period   = rfbucket*ncycles;
     }
     
     public void setCanvasBookData() {
