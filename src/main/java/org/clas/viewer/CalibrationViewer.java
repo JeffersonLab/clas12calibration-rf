@@ -1,5 +1,7 @@
 package org.clas.viewer;
 
+import org.clas.modules.RFsignals;
+import org.clas.modules.RFoffsets;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
@@ -33,7 +35,6 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.clas.detectors.*;
 import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.detector.decode.CodaEventDecoder;
 import org.jlab.detector.decode.DetectorEventDecoder;
@@ -77,7 +78,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
     public String outPath = ".";
     
     // detector monitors
-    DetectorMonitor[] monitors = {
+    CalibrationModule[] monitors = {
                 new RFoffsets("rfOffsets"),         
                 new RFsignals("rfSignals")          
     };
@@ -229,7 +230,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         GStyle.getAxisAttributesY().setLabelFontSize(14);
         
         for(int k =0; k<this.monitors.length; k++) {
-                this.tabbedpane.add(this.monitors[k].getDetectorPanel(), this.monitors[k].getName());
+                this.tabbedpane.add(this.monitors[k].getCalibrationPanel(), this.monitors[k].getName());
                         
         }
         this.tabbedpane.addChangeListener(this);

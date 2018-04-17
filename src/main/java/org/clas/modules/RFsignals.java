@@ -1,7 +1,7 @@
-package org.clas.detectors;
+package org.clas.modules;
 
 import java.util.ArrayList;
-import org.clas.viewer.DetectorMonitor;
+import org.clas.viewer.CalibrationModule;
 import org.jlab.groot.data.GraphErrors;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
@@ -13,7 +13,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 
-public class RFsignals extends DetectorMonitor {
+public class RFsignals extends CalibrationModule {
     
     private int ntime = 500;
     
@@ -44,20 +44,20 @@ public class RFsignals extends DetectorMonitor {
         rf2.setTitleX("RF2 tdc");
         rf2.setTitleY("Counts");
         rf2.setFillColor(4);
-        H1F rfdiff = new H1F("rfdiff","rfdiff", 160, 2.,5.);
+        H1F rfdiff = new H1F("rfdiff","rfdiff", 160, 0., this.rfbucket);
         rfdiff.setTitleX("RF diff");
         rfdiff.setTitleY("Counts");
-        F1D fdiff = new F1D("fdiff","[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        F1D fdiff = new F1D("fdiff","[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
         fdiff.setParameter(0, 0);
         fdiff.setParameter(1, 0);
         fdiff.setParameter(2, 1.0);
         fdiff.setLineWidth(2);
         fdiff.setLineColor(2);
         fdiff.setOptStat("1111");
-        H1F rfdiffAve = new H1F("rfdiffAve_" + run,"rfdiffAve", 480, 1.,4.);
+        H1F rfdiffAve = new H1F("rfdiffAve_" + run,"rfdiffAve", 500, 0., this.rfbucket);
         rfdiffAve.setTitleX("RF diff");
         rfdiffAve.setTitleY("Counts");
-        F1D fdiffAve = new F1D("fdiffAve_"+run,"[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        F1D fdiffAve = new F1D("fdiffAve_"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
         fdiffAve.setParameter(0, 0);
         fdiffAve.setParameter(1, 0);
         fdiffAve.setParameter(2, 1.0);
@@ -100,7 +100,7 @@ public class RFsignals extends DetectorMonitor {
         f1diff.setLineWidth(2);
         f1diff.setLineColor(2);
         f1diff.setOptStat("1111");
-        H1F rf2diff = new H1F("rf2diff","rf2diff", 160, 158.,162.);
+        H1F rf2diff = new H1F("rf2diff","rf2diff", 160, this.period-2, this.period+2);
         rf2diff.setTitleX("RF2 diff (ns)");
         rf2diff.setTitleY("Counts");
         F1D f2diff = new F1D("f2diff","[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
@@ -110,10 +110,10 @@ public class RFsignals extends DetectorMonitor {
         f2diff.setLineWidth(2);
         f2diff.setLineColor(2);
         f2diff.setOptStat("1111");
-        H2F timeRF1 = new H2F("timeRF1","timeRF1",100,0.,240, 200, 1., 4.);
+        H2F timeRF1 = new H2F("timeRF1","timeRF1",100,0.,240, 200, 0., this.rfbucket);
         timeRF1.setTitleX("RF1 (ns)");
         timeRF1.setTitleY("RF diff (ns)");
-        H2F timeRF2 = new H2F("timeRF2","timeRF2",100,0.,240, 200, 1., 4.);
+        H2F timeRF2 = new H2F("timeRF2","timeRF2",100,0.,240, 200, 0., this.rfbucket);
         timeRF2.setTitleX("RF2 (ns)");
         timeRF2.setTitleY("RF diff (ns)");
         GraphErrors  rf1Timeline = new GraphErrors("rf1Timeline");
@@ -140,10 +140,10 @@ public class RFsignals extends DetectorMonitor {
         rfAveTimeline.setTitleY("<RF>");   // Y axis title
         rfAveTimeline.setMarkerColor(44); // color from 0-9 for given palette
         rfAveTimeline.setMarkerSize(5);  // size in points on the screen
-        H1F rf1difftmp = new H1F("rf1difftmp","rf1difftmp", 160, 158.,162.);
-        H1F rf2difftmp = new H1F("rf2difftmp","rf2difftmp", 160, 158.,162.);
-        H1F rfdifftmp = new H1F("rfdifftmp","rfdifftmp", 160, 2.,5.);
-        H1F rfdiffAvetmp = new H1F("rfdiffAvetmp","rfdiffAvetmp", 480, 1.,4.);
+        H1F rf1difftmp = new H1F("rf1difftmp","rf1difftmp", 160, this.period-2, this.period+2);
+        H1F rf2difftmp = new H1F("rf2difftmp","rf2difftmp", 160, this.period-2, this.period+2);
+        H1F rfdifftmp = new H1F("rfdifftmp","rfdifftmp", 200, 0., this.rfbucket);
+        H1F rfdiffAvetmp = new H1F("rfdiffAvetmp","rfdiffAvetmp", 500, 0., this.rfbucket);
         H1F rf1fADC = new H1F("rf1fADC","rf1fADC", 100,0.,400);
         rf1fADC.setTitleX("RF1 tdc");
         rf1fADC.setTitleY("Counts");
@@ -160,13 +160,13 @@ public class RFsignals extends DetectorMonitor {
         rf2fADCadc.setTitleX("RF2 adc");
         rf2fADCadc.setTitleY("Counts");
         rf2fADCadc.setFillColor(36);
-        H1F rffADCdiff = new H1F("rffADCdiff","rffADCdiff", 1000, 55, 65);
+        H1F rffADCdiff = new H1F("rffADCdiff","rffADCdiff", 400, 0., this.rfbucket);
         rffADCdiff.setTitleX("RF diff");
         rffADCdiff.setTitleY("Counts");
-        H1F rffADCdifftmp = new H1F("rffADCdifftmp","rffADCdifftmp", 1000, 55, 65);
+        H1F rffADCdifftmp = new H1F("rffADCdifftmp","rffADCdifftmp", 400, 0., this.rfbucket);
         rffADCdifftmp.setTitleX("RF diff");
         rffADCdifftmp.setTitleY("Counts");
-        F1D ffADCdiff = new F1D("ffADCdiff","[amp]*gaus(x,[mean],[sigma])", 55, 65);
+        F1D ffADCdiff = new F1D("ffADCdiff","[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
         ffADCdiff.setParameter(0, 0);
         ffADCdiff.setParameter(1, 0);
         ffADCdiff.setParameter(2, 1.0);
@@ -222,79 +222,79 @@ public class RFsignals extends DetectorMonitor {
     public void plotHistos(int run) {
         // initialize canvas and plot histograms
         System.out.println("Plotting histograms for run " + run);
-        this.getDetectorCanvas().getCanvas("RF TDCs").divide(3, 2);
-        this.getDetectorCanvas().getCanvas("RF TDCs").setGridX(false);
-        this.getDetectorCanvas().getCanvas("RF TDCs").setGridY(false);
-        this.getDetectorCanvas().getCanvas("RF TDCs").cd(0);
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1"));
-        this.getDetectorCanvas().getCanvas("RF TDCs").cd(1);
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1rawdiff"));
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getF1D("f1rawdiff"),"same");
-        this.getDetectorCanvas().getCanvas("RF TDCs").cd(2);
-        this.getDetectorCanvas().getCanvas("RF TDCs").getPad(2).getAxisZ().setLog(true);
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH2F("rf1rawdiffrf1"));
-        this.getDetectorCanvas().getCanvas("RF TDCs").cd(3);
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2"));
-        this.getDetectorCanvas().getCanvas("RF TDCs").cd(4);
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2rawdiff"));
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getF1D("f2rawdiff"),"same");
-        this.getDetectorCanvas().getCanvas("RF TDCs").cd(5);
-        this.getDetectorCanvas().getCanvas("RF TDCs").getPad(5).getAxisZ().setLog(true);
-        this.getDetectorCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH2F("rf2rawdiffrf2"));
-        this.getDetectorCanvas().getCanvas("RF TDCs").update();
-        this.getDetectorCanvas().getCanvas("RF Time").divide(3, 2);
-        this.getDetectorCanvas().getCanvas("RF Time").setGridX(false);
-        this.getDetectorCanvas().getCanvas("RF Time").setGridY(false);
-        this.getDetectorCanvas().getCanvas("RF Time").cd(0);
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rfdiff"));
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("fdiff"),"same");
-        this.getDetectorCanvas().getCanvas("RF Time").cd(1);
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1diff"));
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("f1diff"),"same");
-        this.getDetectorCanvas().getCanvas("RF Time").cd(2);
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2diff"));
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("f2diff"),"same");
-        this.getDetectorCanvas().getCanvas("RF Time").cd(3);
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAve_"+run));
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("fdiffAve_"+run),"same");
-        this.getDetectorCanvas().getCanvas("RF Time").cd(4);
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH2F("timeRF1"));
-        this.getDetectorCanvas().getCanvas("RF Time").cd(5);
-        this.getDetectorCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH2F("timeRF2"));
-        this.getDetectorCanvas().getCanvas("RF Time").update();
-        this.getDetectorCanvas().getCanvas("RF Timeline").divide(2, 2);
-        this.getDetectorCanvas().getCanvas("RF Timeline").setGridX(false);
-        this.getDetectorCanvas().getCanvas("RF Timeline").setGridY(false);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").divide(3, 2);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").setGridY(false);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").cd(0);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1"));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").cd(1);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1rawdiff"));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getF1D("f1rawdiff"),"same");
+        this.getCalibrationCanvas().getCanvas("RF TDCs").cd(2);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").getPad(2).getAxisZ().setLog(true);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH2F("rf1rawdiffrf1"));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").cd(3);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2"));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").cd(4);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2rawdiff"));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getF1D("f2rawdiff"),"same");
+        this.getCalibrationCanvas().getCanvas("RF TDCs").cd(5);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").getPad(5).getAxisZ().setLog(true);
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().getItem(0,0,run).getH2F("rf2rawdiffrf2"));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").update();
+        this.getCalibrationCanvas().getCanvas("RF Time").divide(3, 2);
+        this.getCalibrationCanvas().getCanvas("RF Time").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF Time").setGridY(false);
+        this.getCalibrationCanvas().getCanvas("RF Time").cd(0);
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rfdiff"));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("fdiff"),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").cd(1);
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1diff"));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("f1diff"),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").cd(2);
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2diff"));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("f2diff"),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").cd(3);
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAve_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getF1D("fdiffAve_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").cd(4);
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH2F("timeRF1"));
+        this.getCalibrationCanvas().getCanvas("RF Time").cd(5);
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().getItem(0,0,run).getH2F("timeRF2"));
+        this.getCalibrationCanvas().getCanvas("RF Time").update();
+        this.getCalibrationCanvas().getCanvas("RF Timeline").divide(2, 2);
+        this.getCalibrationCanvas().getCanvas("RF Timeline").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF Timeline").setGridY(false);
         if(this.getDataGroup().getItem(0,0,run).getGraph("rf1Timeline").getVectorX().size()>=2) {
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(0);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf1Timeline"));
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(1);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf2Timeline"));
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(2);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfTimeline"));
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(3);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfAveTimeline"));               
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(0);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf1Timeline"));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(1);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf2Timeline"));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(2);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfTimeline"));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(3);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfAveTimeline"));               
         }
-        this.getDetectorCanvas().getCanvas("RF Timeline").update();
-        this.getDetectorCanvas().getCanvas("RF fADC").divide(3, 2);
-        this.getDetectorCanvas().getCanvas("RF fADC").setGridX(false);
-        this.getDetectorCanvas().getCanvas("RF fADC").setGridY(false);
-        this.getDetectorCanvas().getCanvas("RF fADC").cd(0);
-        this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1fADC"));
-        this.getDetectorCanvas().getCanvas("RF fADC").cd(1);
-        this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1fADCadc"));
-        this.getDetectorCanvas().getCanvas("RF fADC").cd(2);
-        this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rffADCdiff"));
-        this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getF1D("ffADCdiff"),"same");
-        this.getDetectorCanvas().getCanvas("RF fADC").cd(3);
-        this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2fADC"));
-        this.getDetectorCanvas().getCanvas("RF fADC").cd(4);
-        this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2fADCadc"));
+        this.getCalibrationCanvas().getCanvas("RF Timeline").update();
+        this.getCalibrationCanvas().getCanvas("RF fADC").divide(3, 2);
+        this.getCalibrationCanvas().getCanvas("RF fADC").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF fADC").setGridY(false);
+        this.getCalibrationCanvas().getCanvas("RF fADC").cd(0);
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1fADC"));
+        this.getCalibrationCanvas().getCanvas("RF fADC").cd(1);
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf1fADCadc"));
+        this.getCalibrationCanvas().getCanvas("RF fADC").cd(2);
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rffADCdiff"));
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getF1D("ffADCdiff"),"same");
+        this.getCalibrationCanvas().getCanvas("RF fADC").cd(3);
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2fADC"));
+        this.getCalibrationCanvas().getCanvas("RF fADC").cd(4);
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getH1F("rf2fADCadc"));
         if(this.getDataGroup().getItem(0,0,run).getGraph("rffADCTimeline").getVectorX().size()>=2) {
-            this.getDetectorCanvas().getCanvas("RF fADC").cd(5);
-            this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getGraph("rffADCTimeline"));
+            this.getCalibrationCanvas().getCanvas("RF fADC").cd(5);
+            this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getGraph("rffADCTimeline"));
         }
-        this.getDetectorCanvas().getCanvas("RF fADC").update();
+        this.getCalibrationCanvas().getCanvas("RF fADC").update();
     }
 
     @Override
@@ -339,21 +339,24 @@ public class RFsignals extends DetectorMonitor {
             this.getDataGroup().getItem(0,0,run).getH1F("rf2difftmp").fill((rf2.get(i+1)-rf2.get(i))*tdc2time);
         }
 
-        if(rf1.size()==rf2.size()) {
+        if(rf1.size()==rf2.size() || true) {
             double rfTime1 = 0;
             double rfTime2 = 0;
-            for(int i=0; i<rf1.size(); i++) {
-                this.getDataGroup().getItem(0,0,run).getH1F("rfdiff").fill((rf1.get(i)-rf2.get(i))*tdc2time);
-                this.getDataGroup().getItem(0,0,run).getH1F("rfdifftmp").fill((rf1.get(i)-rf2.get(i))*tdc2time);
-                rfTime1 += rf1.get(i)*tdc2time - i*period;
-                rfTime2 += rf2.get(i)*tdc2time - i*period;
+            int npairs = Math.min(rf1.size(),rf2.size());
+            for(int i=0; i<npairs; i++) {
+                double rfTimei = ((rf1.get(i)-rf2.get(i))*tdc2time + (1000*rfbucket)) % rfbucket;
+                this.getDataGroup().getItem(0,0,run).getH1F("rfdiff").fill(rfTimei);
+                this.getDataGroup().getItem(0,0,run).getH1F("rfdifftmp").fill(rfTimei);
+                rfTime1 += ((rf1.get(i)*tdc2time) % period);
+                rfTime2 += ((rf2.get(i)*tdc2time) % period);
             }
-            rfTime1 /=rf1.size();
-            rfTime2 /=rf2.size();            
-            this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAve_"+run).fill(rfTime1-rfTime2);
-            this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAvetmp").fill(rfTime1-rfTime2);
-            this.getDataGroup().getItem(0,0,run).getH2F("timeRF1").fill(rfTime1,rfTime1-rfTime2);
-            this.getDataGroup().getItem(0,0,run).getH2F("timeRF2").fill(rfTime2,rfTime1-rfTime2);            
+            rfTime1 /=npairs;
+            rfTime2 /=npairs;            
+            double rfTime = (rfTime1-rfTime2 + 1000*rfbucket) % rfbucket;
+            this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAve_"+run).fill(rfTime);
+            this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAvetmp").fill(rfTime);
+            this.getDataGroup().getItem(0,0,run).getH2F("timeRF1").fill(rfTime1,rfTime);
+            this.getDataGroup().getItem(0,0,run).getH2F("timeRF2").fill(rfTime2,rfTime);            
         }
         if(this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAvetmp").getEntries()>=ntime){
             H1F rf1diff   = this.getDataGroup().getItem(0,0,run).getH1F("rf1difftmp");
@@ -397,10 +400,11 @@ public class RFsignals extends DetectorMonitor {
                 }
             }
             if(rf1time>0 && rf2time>0) {
+                double rftime = (rf1time-rf2time + 1000*rfbucket) % rfbucket;
                 this.getDataGroup().getItem(0,0,run).getH1F("rf1fADCadc").fill(rf1adc);
                 this.getDataGroup().getItem(0,0,run).getH1F("rf2fADCadc").fill(rf2adc);
-                this.getDataGroup().getItem(0,0,run).getH1F("rffADCdiff").fill(rf1time-rf2time);
-                this.getDataGroup().getItem(0,0,run).getH1F("rffADCdifftmp").fill(rf1time-rf2time);
+                this.getDataGroup().getItem(0,0,run).getH1F("rffADCdiff").fill(rftime);
+                this.getDataGroup().getItem(0,0,run).getH1F("rffADCdifftmp").fill(rftime);
             }
         }
         if(this.getDataGroup().getItem(0,0,run).getH1F("rffADCdifftmp").getEntries()>=ntime){
@@ -427,18 +431,18 @@ public class RFsignals extends DetectorMonitor {
         int run = this.getRunNumber();
 
         if(this.getDataGroup().getItem(0,0,run).getGraph("rf1Timeline").getVectorX().size()>=2) {
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(0);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf1Timeline"));
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(1);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf2Timeline"));
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(2);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfTimeline"));
-            this.getDetectorCanvas().getCanvas("RF Timeline").cd(3);
-            this.getDetectorCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfAveTimeline"));               
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(0);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf1Timeline"));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(1);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rf2Timeline"));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(2);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfTimeline"));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").cd(3);
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().getItem(0,0,run).getGraph("rfAveTimeline"));               
         }
         if(this.getDataGroup().getItem(0,0,run).getGraph("rffADCTimeline").getVectorX().size()>=2) {
-            this.getDetectorCanvas().getCanvas("RF fADC").cd(5);
-            this.getDetectorCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getGraph("rffADCTimeline"));
+            this.getCalibrationCanvas().getCanvas("RF fADC").cd(5);
+            this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().getItem(0,0,run).getGraph("rffADCTimeline"));
         }
         
         this.fitRF(this.getDataGroup().getItem(0,0,run).getH1F("rf1rawdiff"),this.getDataGroup().getItem(0,0,run).getF1D("f1rawdiff"));
@@ -447,10 +451,11 @@ public class RFsignals extends DetectorMonitor {
         this.fitRF(this.getDataGroup().getItem(0,0,run).getH1F("rf2diff"),   this.getDataGroup().getItem(0,0,run).getF1D("f2diff"));
         this.fitRF(this.getDataGroup().getItem(0,0,run).getH1F("rfdiff"),    this.getDataGroup().getItem(0,0,run).getF1D("fdiff"));
         this.fitRF(this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAve_"+run), this.getDataGroup().getItem(0,0,run).getF1D("fdiffAve_"+run));
+        this.fitRF(this.getDataGroup().getItem(0,0,run).getH1F("rffADCdiff"), this.getDataGroup().getItem(0,0,run).getF1D("ffADCdiff"));
         double rfMean = this.getDataGroup().getItem(0,0,run).getH1F("rfdiffAve_"+run).getMean();
-        this.getDetectorCanvas().getCanvas("RF Time").getPad(3).getAxisX().setRange(rfMean-0.5,rfMean+0.5);
-        this.getDetectorCanvas().getCanvas("RF Time").getPad(4).getAxisY().setRange(rfMean-0.5,rfMean+0.5);
-        this.getDetectorCanvas().getCanvas("RF Time").getPad(5).getAxisY().setRange(rfMean-0.5,rfMean+0.5);
+        this.getCalibrationCanvas().getCanvas("RF Time").getPad(3).getAxisX().setRange(rfMean-0.5,rfMean+0.5);
+        this.getCalibrationCanvas().getCanvas("RF Time").getPad(4).getAxisY().setRange(rfMean-0.5,rfMean+0.5);
+        this.getCalibrationCanvas().getCanvas("RF Time").getPad(5).getAxisY().setRange(rfMean-0.5,rfMean+0.5);
 
         this.updateTable(run);
     }

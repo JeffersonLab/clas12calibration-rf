@@ -11,11 +11,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.ButtonGroup;
-import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JSplitPane;
 import org.jlab.detector.calib.utils.CalibrationConstants;
 import org.jlab.detector.calib.utils.CalibrationConstantsListener;
@@ -31,18 +28,18 @@ import org.jlab.io.task.IDataEventListener;
 import org.jlab.utils.groups.IndexedList;
 
 
-public class DetectorMonitor implements CalibrationConstantsListener, IDataEventListener {    
+public class CalibrationModule implements CalibrationConstantsListener, IDataEventListener {    
     
     private final String           monitorName;
-    private ArrayList<String>      detectorTabNames  = new ArrayList();
-    private IndexedList<DataGroup> detectorData      = new IndexedList<DataGroup>(3);
-    private DataGroup              detectorSummary   = null;
-    private JPanel                 detectorPanel     = null;
-    private EmbeddedCanvasTabbed   detectorCanvas    = null;
-    private CalibrationConstantsView   calibTable    = new CalibrationConstantsView();
-    private CalibrationConstants   calibConstants    = null;
-    private CanvasBook                 canvasBook    = new CanvasBook();
-    private int                    numberOfEvents;
+    private ArrayList<String>      calibrationTabNames  = new ArrayList();
+    private IndexedList<DataGroup> calibrationData      = new IndexedList<DataGroup>(3);
+    private DataGroup              calibrationSummary   = null;
+    private JPanel                 calibrationPanel     = null;
+    private EmbeddedCanvasTabbed   calibrationCanvas    = null;
+    private CalibrationConstantsView      calibTable    = new CalibrationConstantsView();
+    private CalibrationConstants      calibConstants    = null;
+    private CanvasBook                    canvasBook    = new CanvasBook();
+    private int                       numberOfEvents;
 
     
     public int bitsec = 0;
@@ -65,7 +62,7 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     public int    rfid     = 1;
     public double period   = rfbucket*ncycles;
     
-    public DetectorMonitor(String name){
+    public CalibrationModule(String name){
         GStyle.getAxisAttributesX().setTitleFontSize(18);
         GStyle.getAxisAttributesX().setLabelFontSize(14);
         GStyle.getAxisAttributesY().setTitleFontSize(18);
@@ -83,8 +80,8 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
                 
                 
         this.monitorName = name;
-        this.detectorPanel  = new JPanel();
-        this.detectorCanvas = new EmbeddedCanvasTabbed();
+        this.calibrationPanel  = new JPanel();
+        this.calibrationCanvas = new EmbeddedCanvasTabbed();
         this.numberOfEvents = 0;
         
     }
@@ -197,28 +194,28 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
         return canvasBook;
     }
    
-    public EmbeddedCanvasTabbed getDetectorCanvas() {
-        return detectorCanvas;
+    public EmbeddedCanvasTabbed getCalibrationCanvas() {
+        return calibrationCanvas;
     }
     
-    public ArrayList<String> getDetectorTabNames() {
-        return detectorTabNames;
+    public ArrayList<String> getCalibrationTabNames() {
+        return calibrationTabNames;
     }
     
     public IndexedList<DataGroup>  getDataGroup(){
-        return detectorData;
+        return calibrationData;
     }
 
     public String getName() {
         return monitorName;
     }
     
-    public JPanel getDetectorPanel() {
-        return detectorPanel;
+    public JPanel getCalibrationPanel() {
+        return calibrationPanel;
     }
     
-    public DataGroup getDetectorSummary() {
-        return detectorSummary;
+    public DataGroup getCalibrationSummary() {
+        return calibrationSummary;
     }
     
     public int getNumberOfEvents() {
@@ -243,17 +240,17 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
 
     public void init(String Constants) {
         // initialize monitoring application
-        getDetectorPanel().setLayout(new BorderLayout());
+        getCalibrationPanel().setLayout(new BorderLayout());
         this.calibConstants = new CalibrationConstants(3,Constants);
         this.calibConstants.setName(this.monitorName);
 	this.calibConstants.setPrecision(4);
         this.calibTable.addConstants(this.getCalibrationConstants().get(0),this);
         JSplitPane   splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setBottomComponent(getCalibTable());
-        splitPane.setTopComponent(getDetectorCanvas());
+        splitPane.setTopComponent(getCalibrationCanvas());
         splitPane.setDividerLocation(0.75);        
         splitPane.setResizeWeight(0.75);
-        getDetectorPanel().add(splitPane,BorderLayout.CENTER);  
+        getCalibrationPanel().add(splitPane,BorderLayout.CENTER);  
         this.createSummary();
     }
     
@@ -273,10 +270,10 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
         // print canvas to files
         int run = this.getViewRun();
         if(run==0) run = this.getRunNumber();
-        for(int tab=0; tab<this.detectorTabNames.size(); tab++) {
+        for(int tab=0; tab<this.calibrationTabNames.size(); tab++) {
             String fileName = dir + "/" + this.monitorName + "_" + run + "_canvas" + tab + ".png";
             System.out.println(fileName);
-            this.detectorCanvas.getCanvas(this.detectorTabNames.get(tab)).save(fileName);
+            this.calibrationCanvas.getCanvas(this.calibrationTabNames.get(tab)).save(fileName);
         }
     }
     
@@ -300,25 +297,25 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     }
     
     public void setCanvasUpdate(int time) {
-        for(int tab=0; tab<this.detectorTabNames.size(); tab++) {
-            this.detectorCanvas.getCanvas(this.detectorTabNames.get(tab)).initTimer(time);
+        for(int tab=0; tab<this.calibrationTabNames.size(); tab++) {
+            this.calibrationCanvas.getCanvas(this.calibrationTabNames.get(tab)).initTimer(time);
         }
     }
     
     public void setDetectorCanvas(EmbeddedCanvasTabbed canvas) {
-        this.detectorCanvas = canvas;
+        this.calibrationCanvas = canvas;
     }
     
     public void setDetectorTabNames(String... names) {
         for(String name : names) {
-            this.detectorTabNames.add(name);
+            this.calibrationTabNames.add(name);
         }
         EmbeddedCanvasTabbed canvas = new EmbeddedCanvasTabbed(names);
         this.setDetectorCanvas(canvas);
     }
  
     public void setDetectorSummary(DataGroup group) {
-        this.detectorSummary = group;
+        this.calibrationSummary = group;
     }
     
     public void setNumberOfEvents(int numberOfEvents) {
@@ -341,7 +338,7 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
     public void readDataGroup(TDirectory dir) {
         String folder = this.getName() + "/";
         System.out.println("Reading from: " + folder);
-        DataGroup sum = this.getDetectorSummary();
+        DataGroup sum = this.getCalibrationSummary();
         int nrows = sum.getRows();
         int ncols = sum.getColumns();
         int nds   = nrows*ncols;
@@ -448,7 +445,7 @@ public class DetectorMonitor implements CalibrationConstantsListener, IDataEvent
         String folder = "/" + this.getName();
         dir.mkdir(folder);
         dir.cd(folder);
-        DataGroup sum = this.getDetectorSummary();
+        DataGroup sum = this.getCalibrationSummary();
         int nrows = sum.getRows();
         int ncols = sum.getColumns();
         int nds   = nrows*ncols;

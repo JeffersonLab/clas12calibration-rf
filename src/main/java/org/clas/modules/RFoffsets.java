@@ -1,8 +1,8 @@
-package org.clas.detectors;
+package org.clas.modules;
 
 import java.util.ArrayList;
 import org.clas.tools.AdjustFit;
-import org.clas.viewer.DetectorMonitor;
+import org.clas.viewer.CalibrationModule;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.physics.Particle;
 import org.jlab.detector.base.DetectorType;
@@ -14,7 +14,7 @@ import org.jlab.groot.math.F1D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
-public class RFoffsets extends DetectorMonitor {
+public class RFoffsets extends CalibrationModule {
 
 
     public RFoffsets(String name) {
@@ -31,7 +31,7 @@ public class RFoffsets extends DetectorMonitor {
         H1F hrf = this.getDataGroup().getItem(0, 0, run).getH1F("rf" + this.rfid + "center_" + run);
         F1D fun  = this.getDataGroup().getItem(0, 0, run).getF1D("f" + this.rfid + "_" + run);
         AdjustFit cfit = new AdjustFit(hrf, fun, "LRQ");
-        this.getDetectorCanvas().getCanvas("RF Offsets").update();
+        this.getCalibrationCanvas().getCanvas("RF Offsets").update();
         this.updateTable(run);
     }
 
@@ -63,10 +63,10 @@ public class RFoffsets extends DetectorMonitor {
         grf2sigma.setMarkerSize(3);
         DataGroup dg = new DataGroup(2, 1);
         this.setDetectorSummary(dg);
-        this.getDetectorSummary().addDataSet(grf1mean, 0);
-        this.getDetectorSummary().addDataSet(grf2mean, 0);
-        this.getDetectorSummary().addDataSet(grf1sigma, 1);
-        this.getDetectorSummary().addDataSet(grf2sigma, 1);
+        this.getCalibrationSummary().addDataSet(grf1mean, 0);
+        this.getCalibrationSummary().addDataSet(grf2mean, 0);
+        this.getCalibrationSummary().addDataSet(grf1sigma, 1);
+        this.getCalibrationSummary().addDataSet(grf2sigma, 1);
     }
     @Override
     public void createHistos(int run) {
@@ -118,26 +118,26 @@ public class RFoffsets extends DetectorMonitor {
     public void plotHistos(int run) {
         // initialize canvas and plot histograms
         System.out.println("Plotting histograms for run " + run);
-        this.getDetectorCanvas().getCanvas("RF Offsets").divide(2, 2);
-        this.getDetectorCanvas().getCanvas("RF Offsets").setGridX(false);
-        this.getDetectorCanvas().getCanvas("RF Offsets").setGridY(false);
-        this.getDetectorCanvas().getCanvas("RF Offsets").cd(0);
-        this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getH1F("rf1center_"+run));
-        this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run), "same");
-        this.getDetectorCanvas().getCanvas("RF Offsets").cd(1);
-        this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getH1F("rf2center_"+run));
-        this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run), "same");
-        if(this.getDetectorSummary().getGraph("grf1mean").getDataSize(0)>1) {
-            this.getDetectorCanvas().getCanvas("RF Offsets").cd(2);
-            this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDetectorSummary().getGraph("grf1mean"));
-            this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDetectorSummary().getGraph("grf2mean"), "same");
-            this.getDetectorCanvas().getCanvas("RF Offsets").getPad(2).getAxisY().setRange(-this.rfbucket/2, this.rfbucket/2);
-            this.getDetectorCanvas().getCanvas("RF Offsets").cd(3);
-            this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDetectorSummary().getGraph("grf1sigma"));
-            this.getDetectorCanvas().getCanvas("RF Offsets").draw(this.getDetectorSummary().getGraph("grf2sigma"), "same");
-            this.getDetectorCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.04, 0.1);
+        this.getCalibrationCanvas().getCanvas("RF Offsets").divide(2, 2);
+        this.getCalibrationCanvas().getCanvas("RF Offsets").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF Offsets").setGridY(false);
+        this.getCalibrationCanvas().getCanvas("RF Offsets").cd(0);
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getH1F("rf1center_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run), "same");
+        this.getCalibrationCanvas().getCanvas("RF Offsets").cd(1);
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getH1F("rf2center_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run), "same");
+        if(this.getCalibrationSummary().getGraph("grf1mean").getDataSize(0)>1) {
+            this.getCalibrationCanvas().getCanvas("RF Offsets").cd(2);
+            this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf1mean"));
+            this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf2mean"), "same");
+            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(2).getAxisY().setRange(-this.rfbucket/2, this.rfbucket/2);
+            this.getCalibrationCanvas().getCanvas("RF Offsets").cd(3);
+            this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf1sigma"));
+            this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf2sigma"), "same");
+            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.04, 0.1);
         }
-        this.getDetectorCanvas().getCanvas("RF Offsets").update();
+        this.getCalibrationCanvas().getCanvas("RF Offsets").update();
     }
 
     @Override
@@ -233,10 +233,10 @@ public class RFoffsets extends DetectorMonitor {
         double rf2meanerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).parameter(1).error();
         double rf2sigma = Math.abs(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).getParameter(2));
         double rf2sigmaerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).parameter(2).error();
-        this.getDetectorSummary().getGraph("grf1mean").addPoint(this.getRunNumber(), rf1mean, 0, rf1meanerror);
-        this.getDetectorSummary().getGraph("grf2mean").addPoint(this.getRunNumber(), rf2mean, 0, rf2meanerror);
-        this.getDetectorSummary().getGraph("grf1sigma").addPoint(this.getRunNumber(), rf1sigma, 0, rf1sigmaerror);
-        this.getDetectorSummary().getGraph("grf2sigma").addPoint(this.getRunNumber(), rf2sigma, 0, rf1sigmaerror);        
+        this.getCalibrationSummary().getGraph("grf1mean").addPoint(this.getRunNumber(), rf1mean, 0, rf1meanerror);
+        this.getCalibrationSummary().getGraph("grf2mean").addPoint(this.getRunNumber(), rf2mean, 0, rf2meanerror);
+        this.getCalibrationSummary().getGraph("grf1sigma").addPoint(this.getRunNumber(), rf1sigma, 0, rf1sigmaerror);
+        this.getCalibrationSummary().getGraph("grf2sigma").addPoint(this.getRunNumber(), rf2sigma, 0, rf1sigmaerror);        
     }
     
     public void fitRF(H1F hirf, H1F hirfcenter, F1D f1rf) {
@@ -307,6 +307,6 @@ public class RFoffsets extends DetectorMonitor {
         this.getCalibrationTable().setDoubleValue(rf2sigma, "RF2sigma", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf2sigmaerror, "\u03B4(RF2sigma)", 0, 0, run);
         getCalibrationTable().fireTableDataChanged();   
-        System.out.println(rf1mean);
+//        System.out.println(rf1mean);
     }
 }
