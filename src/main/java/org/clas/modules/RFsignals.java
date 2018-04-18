@@ -21,6 +21,7 @@ public class RFsignals extends CalibrationModule {
         super(name);
         this.setDetectorTabNames("RF TDCs","RF Time","RF Timeline","RF fADC");
         this.init("\u0394TDC1:\u0394TDC2:TDC2Time1:TDC2Time2:\u0394RF:\u0394\u2329RF\u232A:\u03C3(\u0394\u2329RF\u232A)");
+        this.getCalibrationTable().addConstraint(9, 0.01, 0.05);
     }
 
     
@@ -44,7 +45,7 @@ public class RFsignals extends CalibrationModule {
         rf2.setTitleX("RF2 tdc");
         rf2.setTitleY("Counts");
         rf2.setFillColor(4);
-        H1F rfdiff = new H1F("rfdiff","rfdiff", 160, 0., this.rfbucket);
+        H1F rfdiff = new H1F("rfdiff","rfdiff", 2, 0., this.rfbucket);
         rfdiff.setTitleX("RF diff");
         rfdiff.setTitleY("Counts");
         F1D fdiff = new F1D("fdiff","[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);

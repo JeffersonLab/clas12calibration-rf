@@ -21,6 +21,8 @@ public class RFoffsets extends CalibrationModule {
         super(name);
         this.setDetectorTabNames("RF Offsets");
         this.init("RF1offset:\u03B4(RF1offset):RF1sigma:\u03B4(RF1sigma):RF2offset:\u03B4(RF2offset):RF2sigma:\u03B4(RF2sigma)");
+        this.getCalibrationTable().addConstraint(5, 0.03, 0.2);
+        this.getCalibrationTable().addConstraint(9, 0.03, 0.2);
     }
 
     @Override
