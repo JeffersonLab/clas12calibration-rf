@@ -45,7 +45,7 @@ public class RFsignals extends CalibrationModule {
         rf2.setTitleX("RF2 tdc");
         rf2.setTitleY("Counts");
         rf2.setFillColor(4);
-        H1F rfdiff = new H1F("rfdiff","rfdiff", 2, 0., this.rfbucket);
+        H1F rfdiff = new H1F("rfdiff","rfdiff", 240, 0., (int) this.rfbucket);
         rfdiff.setTitleX("RF diff");
         rfdiff.setTitleY("Counts");
         F1D fdiff = new F1D("fdiff","[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
@@ -55,7 +55,7 @@ public class RFsignals extends CalibrationModule {
         fdiff.setLineWidth(2);
         fdiff.setLineColor(2);
         fdiff.setOptStat("1111");
-        H1F rfdiffAve = new H1F("rfdiffAve_" + run,"rfdiffAve", 500, 0., this.rfbucket);
+        H1F rfdiffAve = new H1F("rfdiffAve_" + run,"rfdiffAve", 480, 0., this.rfbucket);
         rfdiffAve.setTitleX("RF diff");
         rfdiffAve.setTitleY("Counts");
         F1D fdiffAve = new F1D("fdiffAve_"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
@@ -144,7 +144,7 @@ public class RFsignals extends CalibrationModule {
         H1F rf1difftmp = new H1F("rf1difftmp","rf1difftmp", 160, this.period-2, this.period+2);
         H1F rf2difftmp = new H1F("rf2difftmp","rf2difftmp", 160, this.period-2, this.period+2);
         H1F rfdifftmp = new H1F("rfdifftmp","rfdifftmp", 200, 0., this.rfbucket);
-        H1F rfdiffAvetmp = new H1F("rfdiffAvetmp","rfdiffAvetmp", 500, 0., this.rfbucket);
+        H1F rfdiffAvetmp = new H1F("rfdiffAvetmp","rfdiffAvetmp", 480, 0., this.rfbucket);
         H1F rf1fADC = new H1F("rf1fADC","rf1fADC", 100,0.,400);
         rf1fADC.setTitleX("RF1 tdc");
         rf1fADC.setTitleY("Counts");

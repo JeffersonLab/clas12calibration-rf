@@ -170,7 +170,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         menuItem = new JMenuItem("Clear table");
         menuItem.getAccessibleContext().setAccessibleDescription("Clear table content");
         menuItem.addActionListener(this);
-        table.add(menuItem);
+//        table.add(menuItem);
         menuItem = new JMenuItem("Update table");
         menuItem.getAccessibleContext().setAccessibleDescription("Update table content");
         menuItem.addActionListener(this);
@@ -209,7 +209,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             trigBitsBeam.add(bb); 
         	        	
         }
-        menuBar.add(trigBitsBeam);        
+//        menuBar.add(trigBitsBeam);        
 
         // create main panel
         mainPanel = new JPanel();	
@@ -642,7 +642,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         panel.add(new JLabel("RF cycles"));
         rfCycles.setText(Integer.toString(this.ncycles));
         panel.add(rfCycles);
-        panel.add(new JLabel("TRC2time"));
+        panel.add(new JLabel("TDC2time"));
         tdc2Time.setText(Double.toString(this.tdc2time));
         panel.add(tdc2Time);
         panel.add(new JLabel("RF primary ID"));
