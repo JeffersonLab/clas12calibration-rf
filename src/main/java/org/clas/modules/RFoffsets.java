@@ -76,19 +76,19 @@ public class RFoffsets extends CalibrationModule {
         System.out.println("Creating histograms for run " + run);
         this.setNumberOfEvents(0);
         int nbin = (int) (this.rfbucket/0.01);
-        H1F rf1 = new H1F("rf1_"+run, "rf1_"+run, nbin, -this.rfbucket/2, this.rfbucket/2);
+        H1F rf1 = new H1F("rf1_"+run, "rf1_"+run, nbin, -this.rfbucket, this.rfbucket);
         rf1.setTitleX("RF1 offset");
         rf1.setTitleY("Counts");
         rf1.setFillColor(33);
-        H1F rf2 = new H1F("rf2_"+run, "rf2_"+run, nbin, -this.rfbucket/2, this.rfbucket/2);
+        H1F rf2 = new H1F("rf2_"+run, "rf2_"+run, nbin, -this.rfbucket, this.rfbucket);
         rf2.setTitleX("RF2 offset");
         rf2.setTitleY("Counts");
         rf2.setFillColor(3);
-        H1F rf1center = new H1F("rf1center_"+run, "rf1center_"+run, nbin, -this.rfbucket/2, this.rfbucket/2);
+        H1F rf1center = new H1F("rf1center_"+run, "rf1center_"+run, nbin, -this.rfbucket, this.rfbucket);
         rf1center.setTitleX("RF1 offset");
         rf1center.setTitleY("Counts");
         rf1center.setFillColor(33);
-        H1F rf2center = new H1F("rf2center_"+run, "rf2center_"+run, nbin, -this.rfbucket/2, this.rfbucket/2);
+        H1F rf2center = new H1F("rf2center_"+run, "rf2center_"+run, nbin, -this.rfbucket, this.rfbucket);
         rf2center.setTitleX("RF2 offset");
         rf2center.setTitleY("Counts");
         rf2center.setFillColor(4);
@@ -137,7 +137,7 @@ public class RFoffsets extends CalibrationModule {
             this.getCalibrationCanvas().getCanvas("RF Offsets").cd(3);
             this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf1sigma"));
             this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf2sigma"), "same");
-            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.04, 0.1);
+            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.1, 0.20);
         }
         this.getCalibrationCanvas().getCanvas("RF Offsets").update();
     }
@@ -182,11 +182,11 @@ public class RFoffsets extends CalibrationModule {
                         paddle = bankScint.getShort("component", j);
                     }
                 }
-                if (time > 0 & path > 0 && paddle > 10 && paddle < 25) {
+                if (paddle > 10 && paddle < 25) {
                     double startTime = time - path / PhysicsConstants.speedOfLight();
                     for (int k = 0; k < bankRF.rows(); k++) {
                         int id = bankRF.getInt("id", k);
-                        double dt = (startTime - bankRF.getFloat("time", k) - recEl.vz()/PhysicsConstants.speedOfLight() + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
+                        double dt = (startTime - bankRF.getFloat("time", k) /*- recEl.vz()/PhysicsConstants.speedOfLight()*/ + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
                         this.getDataGroup().getItem(0, 0, this.getRunNumber()).getH1F("rf" + id + "_" + this.getRunNumber()).fill(dt);
                     }
                 }
