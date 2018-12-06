@@ -174,15 +174,17 @@ public class RFoffsets extends CalibrationModule {
                         bankRec.getFloat("vz", 0));
                 double time = 0;
                 double path = 0;
+                int sector = 0;
                 int paddle = 0;
                 for (int j = 0; j < bankScint.rows(); j++) {
                     if (bankScint.getShort("pindex", j) == 0 && bankScint.getByte("detector", j) == DetectorType.FTOF.getDetectorId() && bankScint.getByte("layer", j) == 2) {
                         time = bankScint.getFloat("time", j);
                         path = bankScint.getFloat("path", j);
+                        sector = bankScint.getByte("sector", j);
                         paddle = bankScint.getShort("component", j);
                     }
                 }
-                if (paddle > 10 && paddle < 25) {
+                if (paddle > 10 && paddle < 25 && sector!=0) {
                     double startTime = time - path / PhysicsConstants.speedOfLight();
                     for (int k = 0; k < bankRF.rows(); k++) {
                         int id = bankRF.getInt("id", k);
