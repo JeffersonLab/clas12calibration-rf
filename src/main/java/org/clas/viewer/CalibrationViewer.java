@@ -273,7 +273,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         }
         if(e.getActionCommand()=="Save histograms to file") {
             DateFormat df = new SimpleDateFormat("MM-dd-yyyy_hh.mm.ss_aa");
-            String fileName = "rfCalib_" + this.runNumber + "_" + df.format(new Date()) + ".hipo";
+            String fileName = "rfCalib_" + df.format(new Date()) + ".hipo";
             JFileChooser fc = new JFileChooser();
             File workingDirectory = new File(System.getProperty("user.dir"));   
             fc.setCurrentDirectory(workingDirectory);
@@ -594,7 +594,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                         }
                         for(int k=0; k<this.monitors.length; k++) {
                             this.monitors[k].analyze();
-                            this.monitors[k].fillSummary();
+                            this.monitors[k].fillSummary(this.getRunNumber(event));
                             this.monitors[k].plotHistos(this.getRunNumber(event));
 //                            this.monitors[k]..getDetectorCanvas().u
                         }

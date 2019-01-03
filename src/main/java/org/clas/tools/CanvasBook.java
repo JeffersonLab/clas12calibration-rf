@@ -54,10 +54,10 @@ public class CanvasBook extends JPanel implements ActionListener {
     }
     
     
-    public void setData(IndexedList<DataGroup> dataGroups, int iPad){
+    public void setData(Map<Integer,DataGroup> dataGroups, int iPad){
         this.canvasDataSets.clear();
-        Map<Long, DataGroup> map = dataGroups.getMap();
-        for( Map.Entry<Long, DataGroup> entry : map.entrySet()) {
+        Map<Integer, DataGroup> map = dataGroups;
+        for( Map.Entry<Integer, DataGroup> entry : map.entrySet()) {
             DataGroup group = entry.getValue();
             List<IDataSet> dsList = group.getData(iPad);
             DataGroup newGroup = new DataGroup(1,1);

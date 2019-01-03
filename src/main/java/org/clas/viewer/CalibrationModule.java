@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,14 +26,13 @@ import org.jlab.groot.group.DataGroup;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataEventType;
 import org.jlab.io.task.IDataEventListener;
-import org.jlab.utils.groups.IndexedList;
 
 
 public class CalibrationModule implements CalibrationConstantsListener, IDataEventListener {    
     
     private final String           monitorName;
     private ArrayList<String>      calibrationTabNames  = new ArrayList();
-    private IndexedList<DataGroup> calibrationData      = new IndexedList<DataGroup>(3);
+    private Map<Integer,DataGroup> calibrationData      = new LinkedHashMap<Integer,DataGroup>();
     private DataGroup              calibrationSummary   = null;
     private JPanel                 calibrationPanel     = null;
     private EmbeddedCanvasTabbed   calibrationCanvas    = null;
@@ -101,7 +101,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
         String str_sector    = (String) cc.getValueAt(row, 0);
         String str_layer     = (String) cc.getValueAt(row, 1);
         String str_component = (String) cc.getValueAt(row, 2);
-        System.out.println(str_sector + " " + str_layer + " " + str_component);
+//        System.out.println(str_sector + " " + str_layer + " " + str_component);
         
         int sector    = Integer.parseInt(str_sector);
         int layer     = Integer.parseInt(str_layer);
@@ -134,7 +134,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
 	} else if (event.getType() == DataEventType.EVENT_STOP) {
             processEvent(event);
             analyze();
-            fillSummary();
+            fillSummary(this.getRunNumber());
             plotHistos(this.getRunNumber());
 	}
     }
@@ -201,8 +201,8 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     public ArrayList<String> getCalibrationTabNames() {
         return calibrationTabNames;
     }
-    
-    public IndexedList<DataGroup>  getDataGroup(){
+
+    public Map<Integer,DataGroup>  getDataGroup(){
         return calibrationData;
     }
 
@@ -234,7 +234,12 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
         return viewRun;
     }
     
-    public void fillSummary() {
+    public boolean hasCalibrationSummary() {
+        if(this.calibrationSummary!=null) return true;
+        else return false;
+    }
+
+    public void fillSummary(int run) {
         
     }
 
@@ -338,37 +343,48 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     public void readDataGroup(TDirectory dir) {
         String folder = this.getName() + "/";
         System.out.println("Reading from: " + folder);
-        DataGroup sum = this.getCalibrationSummary();
-        int nrows = sum.getRows();
-        int ncols = sum.getColumns();
-        int nds   = nrows*ncols;
-        DataGroup newSum = new DataGroup(ncols,nrows);
-        for(int i = 0; i < nds; i++){
-            List<IDataSet> dsList = sum.getData(i);
-            for(IDataSet ds : dsList){
-                System.out.println("\t --> " + ds.getName());
-                newSum.addDataSet(dir.getObject(folder, ds.getName()),i);
-            }
-        }            
-        this.setDetectorSummary(newSum);
-        Map<Long, DataGroup> map = this.getDataGroup().getMap();
-        for( Map.Entry<Long, DataGroup> entry : map.entrySet()) {
-            Long key = entry.getKey();
-            DataGroup group = entry.getValue();
-            nrows = group.getRows();
-            ncols = group.getColumns();
-            nds   = nrows*ncols;
-            DataGroup newGroup = new DataGroup(ncols,nrows);
-            for(int i = 0; i < nds; i++){
-                List<IDataSet> dsList = group.getData(i);
-                for(IDataSet ds : dsList){
-                    System.out.println("\t --> " + ds.getName());
-                    newGroup.addDataSet(dir.getObject(folder, ds.getName()),i);
+//        DataGroup sum = this.getCalibrationSummary();
+//        int nrows = sum.getRows();
+//        int ncols = sum.getColumns();
+//        int nds   = nrows*ncols;
+//        DataGroup newSum = new DataGroup(ncols,nrows);
+//        for(int i = 0; i < nds; i++){
+//            List<IDataSet> dsList = sum.getData(i);
+//            for(IDataSet ds : dsList){
+//                System.out.println("\t --> " + ds.getName());
+//                newSum.addDataSet(dir.getObject(folder, ds.getName()),i);
+//            }
+//        }            
+//        this.setDetectorSummary(newSum);
+        Map<Integer, DataGroup> map = this.getDataGroup();
+        System.out.println(dir.getCompositeObjectList(dir));
+        for(String path : dir.getCompositeObjectList(dir)) {
+            String[] tokens = path.split("/");
+            if(tokens.length==4) {
+                int run = Integer.valueOf(tokens[2]);
+                if(!this.getDataGroup().containsKey(run)) {
+                    this.createHistos(run);
                 }
+                DataGroup group = map.get(run);
+                String subFolder = folder + run + "/";
+                int nrows = group.getRows();
+                int ncols = group.getColumns();
+                int nds   = nrows*ncols;
+                DataGroup newGroup = new DataGroup(ncols,nrows);
+                for(int i = 0; i < nds; i++){
+                    List<IDataSet> dsList = group.getData(i);
+                    for(IDataSet ds : dsList){
+                        System.out.println("\t --> " + ds.getName());
+                        newGroup.addDataSet(dir.getObject(subFolder, ds.getName()),i);
+                    }
+                }
+                map.replace(run, newGroup);
+                this.setRunNumber(run);
+                this.plotHistos(run);
+                this.analyze();
+                this.fillSummary(run);
             }
-            map.replace(key, newGroup);
         }
-        this.plotHistos(this.getRunNumber());
     }
     
     public void saveTable(String name) {
@@ -445,23 +461,29 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
         String folder = "/" + this.getName();
         dir.mkdir(folder);
         dir.cd(folder);
-        DataGroup sum = this.getCalibrationSummary();
-        int nrows = sum.getRows();
-        int ncols = sum.getColumns();
-        int nds   = nrows*ncols;
-        for(int i = 0; i < nds; i++){
-            List<IDataSet> dsList = sum.getData(i);
-            for(IDataSet ds : dsList){
-                System.out.println("\t --> " + ds.getName());
-                dir.addDataSet(ds);
+        if(this.hasCalibrationSummary()) {
+            DataGroup sum = this.getCalibrationSummary();
+            int nrows = sum.getRows();
+            int ncols = sum.getColumns();
+            int nds   = nrows*ncols;
+            for(int i = 0; i < nds; i++){
+                List<IDataSet> dsList = sum.getData(i);
+                for(IDataSet ds : dsList){
+                    System.out.println("\t --> " + ds.getName());
+                    dir.addDataSet(ds);
+                }
             }
-        }            
-        Map<Long, DataGroup> map = this.getDataGroup().getMap();
-        for( Map.Entry<Long, DataGroup> entry : map.entrySet()) {
+        }
+        Map<Integer, DataGroup> map = this.getDataGroup();
+        for( Map.Entry<Integer, DataGroup> entry : map.entrySet()) {
+            int       key   = entry.getKey();
             DataGroup group = entry.getValue();
-            nrows = group.getRows();
-            ncols = group.getColumns();
-            nds   = nrows*ncols;
+            String subFolder = folder + "/" + key;
+            dir.mkdir(subFolder);
+            dir.cd(subFolder);
+            int nrows = group.getRows();
+            int ncols = group.getColumns();
+            int nds   = nrows*ncols;
             for(int i = 0; i < nds; i++){
                 List<IDataSet> dsList = group.getData(i);
                 for(IDataSet ds : dsList){

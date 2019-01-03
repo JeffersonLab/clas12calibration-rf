@@ -19,7 +19,7 @@ public class RFoffsets extends CalibrationModule {
 
     public RFoffsets(String name) {
         super(name);
-        this.setDetectorTabNames("RF Offsets");
+        this.setDetectorTabNames("RF1 vs. Sector", "RF2 vs. Sector", "RF Offsets");
         this.init("RF1offset:\u03B4(RF1offset):RF1sigma:\u03B4(RF1sigma):RF2offset:\u03B4(RF2offset):RF2sigma:\u03B4(RF2sigma)");
         this.getCalibrationTable().addConstraint(5, 0.03, 0.2);
         this.getCalibrationTable().addConstraint(9, 0.03, 0.2);
@@ -30,8 +30,8 @@ public class RFoffsets extends CalibrationModule {
         int run = this.getViewRun();
         if(run==0) run = this.getRunNumber();
         System.out.println("Adjusting fit for run " + run);
-        H1F hrf = this.getDataGroup().getItem(0, 0, run).getH1F("rf" + this.rfid + "center_" + run);
-        F1D fun  = this.getDataGroup().getItem(0, 0, run).getF1D("f" + this.rfid + "_" + run);
+        H1F hrf = this.getDataGroup().get(run).getH1F("rf" + this.rfid + "center_" + run);
+        F1D fun  = this.getDataGroup().get(run).getF1D("f" + this.rfid + "_" + run);
         AdjustFit cfit = new AdjustFit(hrf, fun, "LRQ");
         this.getCalibrationCanvas().getCanvas("RF Offsets").update();
         this.updateTable(run);
@@ -106,14 +106,52 @@ public class RFoffsets extends CalibrationModule {
         f2.setLineWidth(2);
         f2.setLineColor(2);
         f2.setOptStat("1111");
-        DataGroup dg = new DataGroup(2, 1);
+        DataGroup dg = new DataGroup(2, 7);
         dg.addDataSet(rf1, 0);
         dg.addDataSet(rf2, 1);
         dg.addDataSet(rf1center, 0);
         dg.addDataSet(rf2center, 1);
         dg.addDataSet(f1, 0);
         dg.addDataSet(f2, 1);
-        this.getDataGroup().add(dg, 0, 0, run);
+        for(int isec=1; isec<=6; isec++) {
+            H1F rf1sec = new H1F("rf1_"+isec+"_"+run, "rf1_"+isec+"_"+run, nbin, -this.rfbucket, this.rfbucket);
+            rf1sec.setTitleX("Sector " + isec);
+            rf1sec.setTitleY("Counts");
+            rf1sec.setFillColor(33);
+            H1F rf2sec = new H1F("rf2_"+isec+"_"+run, "rf2_"+isec+"_"+run, nbin, -this.rfbucket, this.rfbucket);
+            rf2sec.setTitleX("Sector " + isec);
+            rf2sec.setTitleY("Counts");
+            rf2sec.setFillColor(3);
+            H1F rf1seccenter = new H1F("rf1center_"+isec+"_"+run, "rf1center_"+isec+"_"+run, nbin, -this.rfbucket, this.rfbucket);
+            rf1seccenter.setTitleX("Sector " + isec);
+            rf1seccenter.setTitleY("Counts");
+            rf1seccenter.setFillColor(33);
+            H1F rf2seccenter = new H1F("rf2center_"+isec+"_"+run, "rf2center_"+isec+"_"+run, nbin, -this.rfbucket, this.rfbucket);
+            rf2seccenter.setTitleX("Sector " + isec);
+            rf2seccenter.setTitleY("Counts");
+            rf2seccenter.setFillColor(4);
+            F1D f1sec = new F1D("f1_"+isec+"_"+run, "[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+            f1sec.setParameter(0, 0);
+            f1sec.setParameter(1, 0);
+            f1sec.setParameter(2, 0.2);
+            f1sec.setLineWidth(2);
+            f1sec.setLineColor(2);
+            f1sec.setOptStat("1111");
+            F1D f2sec = new F1D("f2_"+isec+"_"+run, "[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+            f2sec.setParameter(0, 0);
+            f2sec.setParameter(1, 0);
+            f2sec.setParameter(2, 0.2);
+            f2sec.setLineWidth(2);
+            f2sec.setLineColor(2);
+            f2sec.setOptStat("1111");
+            dg.addDataSet(rf1sec, 0 + 2*isec);
+            dg.addDataSet(rf2sec, 1 + 2*isec);
+            dg.addDataSet(rf1seccenter, 0 + 2*isec);
+            dg.addDataSet(rf2seccenter, 1 + 2*isec);
+            dg.addDataSet(f1sec, 0 + 2*isec);
+            dg.addDataSet(f2sec, 1 + 2*isec);
+        }
+        this.getDataGroup().put(run,dg);
     }
 
     @Override
@@ -124,11 +162,11 @@ public class RFoffsets extends CalibrationModule {
         this.getCalibrationCanvas().getCanvas("RF Offsets").setGridX(false);
         this.getCalibrationCanvas().getCanvas("RF Offsets").setGridY(false);
         this.getCalibrationCanvas().getCanvas("RF Offsets").cd(0);
-        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getH1F("rf1center_"+run));
-        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run), "same");
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().get(run).getH1F("rf1center_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().get(run).getF1D("f1_"+run), "same");
         this.getCalibrationCanvas().getCanvas("RF Offsets").cd(1);
-        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getH1F("rf2center_"+run));
-        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run), "same");
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().get(run).getH1F("rf2center_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getDataGroup().get(run).getF1D("f2_"+run), "same");
         if(this.getCalibrationSummary().getGraph("grf1mean").getDataSize(0)>1) {
             this.getCalibrationCanvas().getCanvas("RF Offsets").cd(2);
             this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf1mean"));
@@ -140,6 +178,22 @@ public class RFoffsets extends CalibrationModule {
             this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.1, 0.20);
         }
         this.getCalibrationCanvas().getCanvas("RF Offsets").update();
+        this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").divide(3, 2);
+        this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").setGridY(false);
+        for(int isec=1; isec<=6; isec++) {
+            this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").cd(0 + isec -1);
+            this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").draw(this.getDataGroup().get(run).getH1F("rf1center_"+isec+"_"+run));
+            this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").draw(this.getDataGroup().get(run).getF1D("f1_"+isec+"_"+run), "same");
+        }
+        this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").divide(3, 2);
+        this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").setGridY(false);
+        for(int isec=1; isec<=6; isec++) {
+            this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").cd(0 + isec -1);
+            this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").draw(this.getDataGroup().get(run).getH1F("rf2center_"+isec+"_"+run));
+            this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").draw(this.getDataGroup().get(run).getF1D("f2_"+isec+"_"+run), "same");
+        }
     }
 
     @Override
@@ -189,7 +243,8 @@ public class RFoffsets extends CalibrationModule {
                     for (int k = 0; k < bankRF.rows(); k++) {
                         int id = bankRF.getInt("id", k);
                         double dt = (startTime - bankRF.getFloat("time", k) /*- recEl.vz()/PhysicsConstants.speedOfLight()*/ + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
-                        this.getDataGroup().getItem(0, 0, this.getRunNumber()).getH1F("rf" + id + "_" + this.getRunNumber()).fill(dt);
+                        this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "_" + this.getRunNumber()).fill(dt);
+                        this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "_" + sector + "_" + this.getRunNumber()).fill(dt);
                     }
                 }
             }
@@ -211,12 +266,20 @@ public class RFoffsets extends CalibrationModule {
 //        System.out.println("Updating RF for run " + this.getRunNumber());
         int run = this.getRunNumber();
 
-        this.fitRF(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getH1F("rf1_"+run),
-                this.getDataGroup().getItem(0, 0, this.getRunNumber()).getH1F("rf1center_"+run),
-                this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run));
-        this.fitRF(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getH1F("rf2_"+run),
-                this.getDataGroup().getItem(0, 0, this.getRunNumber()).getH1F("rf2center_"+run),
-                this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf1_"+run),
+                this.getDataGroup().get(run).getH1F("rf1center_"+run),
+                this.getDataGroup().get(run).getF1D("f1_"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf2_"+run),
+                this.getDataGroup().get(run).getH1F("rf2center_"+run),
+                this.getDataGroup().get(run).getF1D("f2_"+run));
+        for(int isec=1; isec<=6; isec++) {
+            this.fitRF(this.getDataGroup().get(run).getH1F("rf1_"+isec+"_"+run),
+                    this.getDataGroup().get(run).getH1F("rf1center_"+isec+"_"+run),
+                    this.getDataGroup().get(run).getF1D("f1_"+isec+"_"+run));
+            this.fitRF(this.getDataGroup().get(run).getH1F("rf2_"+isec+"_"+run),
+                    this.getDataGroup().get(run).getH1F("rf2center_"+isec+"_"+run),
+                    this.getDataGroup().get(run).getF1D("f2_"+isec+"_"+run));
+        }
         if (!this.getCalibrationTable().hasEntry(0, 0, this.getRunNumber())) {
             this.getCalibrationTable().addEntry(0, 0, this.getRunNumber());
         }
@@ -225,18 +288,17 @@ public class RFoffsets extends CalibrationModule {
     }
 
     @Override
-    public void fillSummary() {
+    public void fillSummary(int run) {
         System.out.println("Filling summary...");
-        int run = this.getRunNumber();
 
-        double rf1mean = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).getParameter(1);
-        double rf1meanerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).parameter(1).error();
-        double rf1sigma = Math.abs(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).getParameter(2));
-        double rf1sigmaerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f1_"+run).parameter(2).error();
-        double rf2mean = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).getParameter(1);
-        double rf2meanerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).parameter(1).error();
-        double rf2sigma = Math.abs(this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).getParameter(2));
-        double rf2sigmaerror = this.getDataGroup().getItem(0, 0, this.getRunNumber()).getF1D("f2_"+run).parameter(2).error();
+        double rf1mean = this.getDataGroup().get(run).getF1D("f1_"+run).getParameter(1);
+        double rf1meanerror = this.getDataGroup().get(run).getF1D("f1_"+run).parameter(1).error();
+        double rf1sigma = Math.abs(this.getDataGroup().get(run).getF1D("f1_"+run).getParameter(2));
+        double rf1sigmaerror = this.getDataGroup().get(run).getF1D("f1_"+run).parameter(2).error();
+        double rf2mean = this.getDataGroup().get(run).getF1D("f2_"+run).getParameter(1);
+        double rf2meanerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(1).error();
+        double rf2sigma = Math.abs(this.getDataGroup().get(run).getF1D("f2_"+run).getParameter(2));
+        double rf2sigmaerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(2).error();
         this.getCalibrationSummary().getGraph("grf1mean").addPoint(this.getRunNumber(), rf1mean, 0, rf1meanerror);
         this.getCalibrationSummary().getGraph("grf2mean").addPoint(this.getRunNumber(), rf2mean, 0, rf2meanerror);
         this.getCalibrationSummary().getGraph("grf1sigma").addPoint(this.getRunNumber(), rf1sigma, 0, rf1sigmaerror);
@@ -293,14 +355,14 @@ public class RFoffsets extends CalibrationModule {
 
     @Override
     public void updateTable(int run) {
-        double rf1mean = this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).getParameter(1);
-        double rf1meanerror = this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).parameter(1).error();
-        double rf1sigma = Math.abs(this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).getParameter(2));
-        double rf1sigmaerror = this.getDataGroup().getItem(0, 0, run).getF1D("f1_"+run).parameter(2).error();
-        double rf2mean = this.getDataGroup().getItem(0, 0,run).getF1D("f2_"+run).getParameter(1);
-        double rf2meanerror = this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run).parameter(1).error();
-        double rf2sigma = Math.abs(this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run).getParameter(2));
-        double rf2sigmaerror = this.getDataGroup().getItem(0, 0, run).getF1D("f2_"+run).parameter(2).error();
+        double rf1mean = this.getDataGroup().get(run).getF1D("f1_"+run).getParameter(1);
+        double rf1meanerror = this.getDataGroup().get(run).getF1D("f1_"+run).parameter(1).error();
+        double rf1sigma = Math.abs(this.getDataGroup().get(run).getF1D("f1_"+run).getParameter(2));
+        double rf1sigmaerror = this.getDataGroup().get(run).getF1D("f1_"+run).parameter(2).error();
+        double rf2mean = this.getDataGroup().get(run).getF1D("f2_"+run).getParameter(1);
+        double rf2meanerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(1).error();
+        double rf2sigma = Math.abs(this.getDataGroup().get(run).getF1D("f2_"+run).getParameter(2));
+        double rf2sigmaerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(2).error();
 
         this.getCalibrationTable().setDoubleValue(rf1mean, "RF1offset", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf1meanerror, "\u03B4(RF1offset)", 0, 0, run);
