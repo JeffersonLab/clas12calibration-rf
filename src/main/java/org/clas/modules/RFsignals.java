@@ -1,24 +1,30 @@
 package org.clas.modules;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.clas.viewer.CalibrationModule;
 import org.jlab.groot.data.GraphErrors;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
-import org.jlab.groot.data.TDirectory;
 import org.jlab.groot.fitter.DataFitter;
 import org.jlab.groot.group.DataGroup;
 import org.jlab.groot.math.F1D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.utils.groups.IndexedTable;
 
 
 public class RFsignals extends CalibrationModule {
     
     private int ntime = 500;
+    IndexedTable rfConfig = null;
     
     public RFsignals(String name) {
         super(name);
+        
+        this.getCcdb().setVariation("default");
+        this.getCcdb().init(Arrays.asList(new String[]{"/calibration/eb/rf/config"}));
+
         this.setDetectorTabNames("RF TDCs","RF Time","RF Timeline","RF fADC");
         this.init("\u0394TDC1:\u0394TDC2:TDC2Time1:TDC2Time2:\u0394RF:\u0394\u2329RF\u232A:\u03C3(\u0394\u2329RF\u232A)");
         this.getCalibrationTable().addConstraint(9, 0.01, 0.05);
@@ -30,6 +36,8 @@ public class RFsignals extends CalibrationModule {
         // create histograms
         System.out.println("Creating histograms for run " + run);
         this.setNumberOfEvents(0);
+        int tdcMin = (int) (ncycles*rfbucket/tdc2time)-100;
+        int tdcMax = (int) (ncycles*rfbucket/tdc2time)+100;
 //        H1F summary = new H1F("summary","summary",6,0.5,6.5);
 //        summary.setTitleX("sector");
 //        summary.setTitleY("DC hits");
@@ -65,30 +73,30 @@ public class RFsignals extends CalibrationModule {
         fdiffAve.setLineWidth(2);
         fdiffAve.setLineColor(2);
         fdiffAve.setOptStat("1111");
-        H1F rf1rawdiff = new H1F("rf1rawdiff_"+run,"rf1rawdiff_"+run, 100, 6800.,6900.);
+        H1F rf1rawdiff = new H1F("rf1rawdiff_"+run,"rf1rawdiff_"+run, 100, tdcMin, tdcMax);
         rf1rawdiff.setTitleX("RF1 diff");
         rf1rawdiff.setTitleY("Counts");
-        F1D f1rawdiff = new F1D("f1rawdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        F1D f1rawdiff = new F1D("f1rawdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
         f1rawdiff.setParameter(0, 0);
         f1rawdiff.setParameter(1, 0);
         f1rawdiff.setParameter(2, 1.0);
         f1rawdiff.setLineWidth(2);
         f1rawdiff.setLineColor(2);
         f1rawdiff.setOptStat("1111");
-        H1F rf2rawdiff = new H1F("rf2rawdiff_"+run,"rf2rawdiff_"+run, 100, 6800.,6900.);
+        H1F rf2rawdiff = new H1F("rf2rawdiff_"+run,"rf2rawdiff_"+run, 100, tdcMin, tdcMax);
         rf2rawdiff.setTitleX("RF2 diff");
         rf2rawdiff.setTitleY("Counts");
-        F1D f2rawdiff = new F1D("f2rawdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        F1D f2rawdiff = new F1D("f2rawdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
         f2rawdiff.setParameter(0, 0);
         f2rawdiff.setParameter(1, 0);
         f2rawdiff.setParameter(2, 1.0);
         f2rawdiff.setLineWidth(2);
         f2rawdiff.setLineColor(2);
         f2rawdiff.setOptStat("1111");
-        H2F rf1rawdiffrf1 = new H2F("rf1rawdiffrf1_"+run,"rf1rawdiffrf1_"+run, 100,0.,120000, 25, 6800.,6900.);
+        H2F rf1rawdiffrf1 = new H2F("rf1rawdiffrf1_"+run,"rf1rawdiffrf1_"+run, 100,0.,120000, 25, tdcMin, tdcMax);
         rf1rawdiffrf1.setTitleX("RF1 tdc");
         rf1rawdiffrf1.setTitleY("RF1 diff");
-        H2F rf2rawdiffrf2 = new H2F("rf2rawdiffrf2_"+run,"rf2rawdiffrf2_"+run, 100,0.,120000, 25, 6800.,6900.);
+        H2F rf2rawdiffrf2 = new H2F("rf2rawdiffrf2_"+run,"rf2rawdiffrf2_"+run, 100,0.,120000, 25, tdcMin, tdcMax);
         rf2rawdiffrf2.setTitleX("RF2 tdc");
         rf2rawdiffrf2.setTitleY("RF2 diff");
         H1F rf1diff = new H1F("rf1diff_"+run,"rf1diff_"+run, 160, this.period-2, this.period+2);
@@ -104,17 +112,17 @@ public class RFsignals extends CalibrationModule {
         H1F rf2diff = new H1F("rf2diff_"+run,"rf2diff_"+run, 160, this.period-2, this.period+2);
         rf2diff.setTitleX("RF2 diff (ns)");
         rf2diff.setTitleY("Counts");
-        F1D f2diff = new F1D("f2diff_"+run,"[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        F1D f2diff = new F1D("f2diff_"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
         f2diff.setParameter(0, 0);
         f2diff.setParameter(1, 0);
         f2diff.setParameter(2, 1.0);
         f2diff.setLineWidth(2);
         f2diff.setLineColor(2);
         f2diff.setOptStat("1111");
-        H2F timeRF1 = new H2F("timeRF1_"+run,"timeRF1_"+run,100,0.,240, 200, 0., this.rfbucket);
+        H2F timeRF1 = new H2F("timeRF1_"+run,"timeRF1_"+run,100,0.,this.period, 200, 0., this.rfbucket);
         timeRF1.setTitleX("RF1 (ns)");
         timeRF1.setTitleY("RF diff (ns)");
-        H2F timeRF2 = new H2F("timeRF2_"+run,"timeRF2_"+run,100,0.,240, 200, 0., this.rfbucket);
+        H2F timeRF2 = new H2F("timeRF2_"+run,"timeRF2_"+run,100,0.,this.period, 200, 0., this.rfbucket);
         timeRF2.setTitleX("RF2 (ns)");
         timeRF2.setTitleY("RF diff (ns)");
         GraphErrors  rf1Timeline = new GraphErrors("rf1Timeline_"+run);
@@ -153,11 +161,11 @@ public class RFsignals extends CalibrationModule {
         rf2fADC.setTitleX("RF2 tdc");
         rf2fADC.setTitleY("Counts");
         rf2fADC.setFillColor(36);
-        H1F rf1fADCadc = new H1F("rf1fADCadc_"+run,"rf1fADCadc_"+run, 100,0.,10000);
+        H1F rf1fADCadc = new H1F("rf1fADCadc_"+run,"rf1fADCadc_"+run, 100,0.,60000);
         rf1fADCadc.setTitleX("RF1 adc");
         rf1fADCadc.setTitleY("Counts");
         rf1fADCadc.setFillColor(33);
-        H1F rf2fADCadc = new H1F("rf2fADCadc_"+run,"rf2fADCadc_"+run, 100,0.,40000);
+        H1F rf2fADCadc = new H1F("rf2fADCadc_"+run,"rf2fADCadc_"+run, 100,0.,60000);
         rf2fADCadc.setTitleX("RF2 adc");
         rf2fADCadc.setTitleY("Counts");
         rf2fADCadc.setFillColor(36);
@@ -302,6 +310,25 @@ public class RFsignals extends CalibrationModule {
     public void processEvent(DataEvent event) {
         
         int run = this.getRunNumber();
+        
+        if(event.hasBank("RUN::config")){
+	    DataBank head = event.getBank("RUN::config");
+            int runNumber    = head.getInt("run", 0);
+            rfConfig = this.getCcdb().getConstants(runNumber, "/calibration/eb/rf/config");
+            double run_tdc2Time = rfConfig.getDoubleValue("tdc2time",1,1,1);
+            double run_rfbucket = rfConfig.getDoubleValue("clock",1,1,1);
+            int    run_ncycles  = rfConfig.getIntValue("cycles",1,1,1);
+            if(run_tdc2Time != this.tdc2time || run_rfbucket != this.rfbucket || run_ncycles != this.ncycles) {
+                this.tdc2time = run_tdc2Time;
+                this.rfbucket = run_rfbucket;
+                this.ncycles  = run_ncycles;                
+                this.period   = rfbucket*ncycles;
+                this.resetEventListener();
+                System.out.println("RF config parameter changed to: \n\t tdc2time = " + this.tdc2time + "\n\t rf bucket = " + this.rfbucket + "\n\t n. of cycles = " + this.ncycles);
+            }
+//            System.out.println();
+        }        
+        
         // process event info and save into data group
         ArrayList<Integer> rf1 = new ArrayList();
         ArrayList<Integer> rf2 = new ArrayList();

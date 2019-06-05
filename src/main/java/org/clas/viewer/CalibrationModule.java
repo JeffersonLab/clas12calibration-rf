@@ -18,6 +18,7 @@ import javax.swing.JSplitPane;
 import org.jlab.detector.calib.utils.CalibrationConstants;
 import org.jlab.detector.calib.utils.CalibrationConstantsListener;
 import org.jlab.detector.calib.utils.CalibrationConstantsView;
+import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.IDataSet;
 import org.jlab.groot.data.TDirectory;
@@ -38,6 +39,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     private EmbeddedCanvasTabbed   calibrationCanvas    = null;
     private CalibrationConstantsView      calibTable    = new CalibrationConstantsView();
     private CalibrationConstants      calibConstants    = null;
+    private ConstantsManager                    ccdb    = new ConstantsManager(); 
     private CanvasBook                    canvasBook    = new CanvasBook();
     private int                       numberOfEvents;
 
@@ -143,6 +145,10 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     
     }
     
+    public ConstantsManager getCcdb() {
+        return ccdb;
+    }
+
     public void setTriggerPhase(long phase) {
     	   this.triggerPhase = phase;
     }
