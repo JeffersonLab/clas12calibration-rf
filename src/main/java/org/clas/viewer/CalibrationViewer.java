@@ -47,7 +47,6 @@ import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
-import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataSource;
 
         
@@ -83,11 +82,11 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                 new RFsignals("rfSignals")          
     };
 
-    private double tdc2time = 0.023436;
-    private double rfbucket = 4.008;
-    private int    ncycles  = 40;
-    private int    rfid     = 1;
-
+    private double tdc2time  = 0.023436; // ns/ch
+    private double rfbucket  = 4.008;    // ns
+    private int    ncycles   = 32;
+    private int    rfid      = 1;
+    private double targetPos = -3;      // cm
     
     public CalibrationViewer() {    	
         		
@@ -347,7 +346,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         if(e.getActionCommand()=="Set RF parameters...") {
             this.setAnalysisParameters();
             for(int k=0; k<this.monitors.length; k++) {
-                this.monitors[k].setAnalysisParameters(this.rfbucket,this.ncycles,this.tdc2time,this.rfid);
+                this.monitors[k].setAnalysisParameters(this.rfbucket,this.ncycles,this.tdc2time,this.rfid,this.targetPos);
             }
         }
          if(e.getActionCommand() == "View all") {
@@ -548,8 +547,6 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
   
     
     private void readFiles() {
-        EvioSource     evioReader = new EvioSource();
-        HipoDataSource hipoReader = new HipoDataSource();
         JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Choose input files directory...");
         fc.setMultiSelectionEnabled(true);
@@ -561,45 +558,33 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             int nf = 0;
             for (File fd : fc.getSelectedFiles()) {
                 if (fd.isFile()) {
-                    if (fd.getName().contains(".evio") || fd.getName().contains(".hipo")) {
-                        Integer current = 0;
-                        Integer nevents = 0;
-                        DataEvent event = null;
-                        if(fd.getName().contains(".hipo")) {
-                            hipoReader.open(fd);
-                            current = hipoReader.getCurrentIndex();
-                            nevents = hipoReader.getSize();                            
+                    Integer current = 0;
+                    Integer nevents = 0;
+                    DataEvent event = null;
+                    HipoDataSource hipoReader = new HipoDataSource();
+                    hipoReader.open(fd);
+                    current = hipoReader.getCurrentIndex();
+                    nevents = hipoReader.getSize();
+                    System.out.println("\nFILE: " + nf + " " + fd.getName() + " N.EVENTS: " + nevents.toString() + "  CURRENT : " + current.toString());
+                    for (int k = 0; k < nevents; k++) {
+                        if (hipoReader.hasEvent() == true) {
+                            event = hipoReader.getNextEvent();
                         }
-                        else if(fd.getName().contains(".evio")) {
-                            evioReader.open(fd);
-                            current = evioReader.getCurrentIndex();
-                            nevents = evioReader.getSize();
-                        }
-                        System.out.println("\nFILE: " + nf + " " + fd.getName() + " N.EVENTS: " + nevents.toString() + "  CURRENT : " + current.toString());                        
-                        for (int k = 0; k < nevents; k++) {
-                            if(fd.getName().contains(".hipo")) {
-                                if (hipoReader.hasEvent()) {
-                                    event = hipoReader.getNextEvent();                          
-                                }
-                            }
-                            else if(fd.getName().contains(".evio")) {
-                                if (evioReader.hasEvent()) {
-                                    event = evioReader.getNextEvent();
-                                }
-                            }
-                            if(event != null) {
-                                this.dataEventAction(event);
-                                if(k % 10000 == 0) System.out.println("Read " + k + " events");
+                        if (event != null) {
+                            this.dataEventAction(event);
+                            if (k % 10000 == 0) {
+                                System.out.println("Read " + k + " events");
                             }
                         }
-                        for(int k=0; k<this.monitors.length; k++) {
-                            this.monitors[k].analyze();
-                            this.monitors[k].fillSummary(this.getRunNumber(event));
-                            this.monitors[k].plotHistos(this.getRunNumber(event));
-//                            this.monitors[k]..getDetectorCanvas().u
-                        }
-                        nf++;
                     }
+                    hipoReader.close();
+                    for (int k = 0; k < this.monitors.length; k++) {
+                        this.monitors[k].analyze();
+                        this.monitors[k].fillSummary(this.getRunNumber(event));
+                        this.monitors[k].plotHistos(this.getRunNumber(event));
+//                            this.monitors[k]..getDetectorCanvas().u
+                    }
+                    nf++;
                 }
             }
 //            this.updateTable();
@@ -631,10 +616,11 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
 	JTextField rfCycles    = new JTextField(5);
 	JTextField tdc2Time    = new JTextField(5);
 	JTextField rfID        = new JTextField(5);
+	JTextField targetPOS   = new JTextField(5);
 	
         
 	JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(4,2));            
+        panel.setLayout(new GridLayout(5,2));            
            
         panel.add(new JLabel("RF period"));
         rfFrequency.setText(Double.toString(this.rfbucket));
@@ -648,6 +634,9 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         panel.add(new JLabel("RF primary ID"));
         rfID.setText(Integer.toString(this.rfid));
         panel.add(rfID);
+        panel.add(new JLabel("Target z position"));
+        targetPOS.setText(Double.toString(this.targetPos));
+        panel.add(targetPOS);
         
         int result = JOptionPane.showConfirmDialog(null, panel, "Analysis parameters", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {        
@@ -663,11 +652,15 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             if (!rfID.getText().isEmpty()) {
                 this.rfid = Integer.parseInt(rfID.getText());
             } 
+            if (!targetPOS.getText().isEmpty()) {
+                this.targetPos = Double.parseDouble(targetPOS.getText());
+            } 
             System.out.println("RF analysis paramters");
             System.out.println("\n\tRF period: " + this.rfbucket);
             System.out.println("\n\tRF cycles: " + this.ncycles);
             System.out.println("\n\tTDC-to-time conversion factor: " + this.tdc2time);
-            System.out.println("\n\tRF primary sifnal IDr: " + this.rfid);
+            System.out.println("\n\tRF primary signal ID: " + this.rfid);
+            System.out.println("\n\tTarget z position: " + this.targetPos);
         }
     }
     

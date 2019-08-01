@@ -58,11 +58,13 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     private int eventNumber = 0;
     private int viewRun     = 0;
     
-    public double tdc2time = 0.023436;
-    public double rfbucket = 4.008;
-    public int    ncycles  = 40;
-    public int    rfid     = 1;
-    public double period   = rfbucket*ncycles;
+    public double tdc2time  = 0.023436;
+    public double rfbucket  = 4.008;
+    public int    ncycles   = 32;
+    public int    rfid      = 1;
+    public double period    = rfbucket*ncycles;
+    public double targetPos = -3;
+
     
     public CalibrationModule(String name){
         GStyle.getAxisAttributesX().setTitleFontSize(18);
@@ -436,12 +438,13 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
 
      }
 
-    public void setAnalysisParameters(double rfbucket, int ncycles, double tdc2time, int rfid) {
-        this.rfbucket = rfbucket;
-        this.ncycles  = ncycles;
-        this.tdc2time = tdc2time;
-        this.rfid     = rfid;
-        period   = rfbucket*ncycles;
+    public void setAnalysisParameters(double rfbucket, int ncycles, double tdc2time, int rfid, double targetPos) {
+        this.rfbucket  = rfbucket;
+        this.ncycles   = ncycles;
+        this.tdc2time  = tdc2time;
+        this.rfid      = rfid;
+        this.period    = rfbucket*ncycles;
+        this.targetPos = targetPos;
     }
     
     public void setCanvasBookData() {

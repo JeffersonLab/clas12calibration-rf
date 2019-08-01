@@ -106,13 +106,13 @@ public class RFoffsets extends CalibrationModule {
         f2.setLineWidth(2);
         f2.setLineColor(2);
         f2.setOptStat("1111");
-        DataGroup dg = new DataGroup(2, 7);
+        DataGroup dg = new DataGroup(2, 8);
         dg.addDataSet(rf1, 0);
         dg.addDataSet(rf2, 1);
-        dg.addDataSet(rf1center, 0);
-        dg.addDataSet(rf2center, 1);
-        dg.addDataSet(f1, 0);
-        dg.addDataSet(f2, 1);
+        dg.addDataSet(rf1center, 2);
+        dg.addDataSet(rf2center, 3);
+        dg.addDataSet(f1, 2);
+        dg.addDataSet(f2, 3);
         for(int isec=1; isec<=6; isec++) {
             H1F rf1sec = new H1F("rf1_"+isec+"_"+run, "rf1_"+isec+"_"+run, nbin, -this.rfbucket, this.rfbucket);
             rf1sec.setTitleX("Sector " + isec);
@@ -144,12 +144,12 @@ public class RFoffsets extends CalibrationModule {
             f2sec.setLineWidth(2);
             f2sec.setLineColor(2);
             f2sec.setOptStat("1111");
-            dg.addDataSet(rf1sec, 0 + 2*isec);
-            dg.addDataSet(rf2sec, 1 + 2*isec);
-            dg.addDataSet(rf1seccenter, 0 + 2*isec);
-            dg.addDataSet(rf2seccenter, 1 + 2*isec);
-            dg.addDataSet(f1sec, 0 + 2*isec);
-            dg.addDataSet(f2sec, 1 + 2*isec);
+            dg.addDataSet(rf1sec, 2 + 2*isec);
+            dg.addDataSet(rf2sec, 3 + 2*isec);
+            dg.addDataSet(rf1seccenter, 2 + 2*isec);
+            dg.addDataSet(rf2seccenter, 3 + 2*isec);
+            dg.addDataSet(f1sec, 2 + 2*isec);
+            dg.addDataSet(f2sec, 3 + 2*isec);
         }
         this.getDataGroup().put(run,dg);
     }
@@ -175,7 +175,7 @@ public class RFoffsets extends CalibrationModule {
             this.getCalibrationCanvas().getCanvas("RF Offsets").cd(3);
             this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf1sigma"));
             this.getCalibrationCanvas().getCanvas("RF Offsets").draw(this.getCalibrationSummary().getGraph("grf2sigma"), "same");
-            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.1, 0.20);
+//            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.1, 0.20);
         }
         this.getCalibrationCanvas().getCanvas("RF Offsets").update();
         this.getCalibrationCanvas().getCanvas("RF1 vs. Sector").divide(3, 2);
@@ -242,7 +242,7 @@ public class RFoffsets extends CalibrationModule {
                     double startTime = time - path / PhysicsConstants.speedOfLight();
                     for (int k = 0; k < bankRF.rows(); k++) {
                         int id = bankRF.getInt("id", k);
-                        double dt = (startTime - bankRF.getFloat("time", k) /*- recEl.vz()/PhysicsConstants.speedOfLight()*/ + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
+                        double dt = (startTime - bankRF.getFloat("time", k) + (this.targetPos - recEl.vz())/PhysicsConstants.speedOfLight() + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
                         this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "_" + this.getRunNumber()).fill(dt);
                         this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "_" + sector + "_" + this.getRunNumber()).fill(dt);
                     }
@@ -253,7 +253,7 @@ public class RFoffsets extends CalibrationModule {
     
     @Override
     public void setCanvasBookData() {
-        this.getCanvasBook().setData(this.getDataGroup(), this.rfid-1);
+        this.getCanvasBook().setData(this.getDataGroup(), this.rfid+1);
     }
     
     @Override
@@ -338,15 +338,15 @@ public class RFoffsets extends CalibrationModule {
         f1rf.setParameter(0, amp);
         f1rf.setParameter(1, mean);
         f1rf.setParameter(2, sigma);
-        double rmax = Math.min(mean + 2. * Math.abs(sigma),  this.rfbucket/2);
-        double rmin = Math.max(mean - 2. * Math.abs(sigma), -this.rfbucket/2);
+        double rmax = Math.min(mean + 2. * Math.abs(sigma),  this.rfbucket);
+        double rmin = Math.max(mean - 2. * Math.abs(sigma), -this.rfbucket);
         f1rf.setRange(rmin, rmax);
         DataFitter.fit(f1rf, hirfcenter, "Q"); //No options uses error for sigma 
         hirfcenter.setFunction(null);
         mean = f1rf.getParameter(1);
         sigma = f1rf.getParameter(2);
-        rmax = Math.min(mean + 2. * Math.abs(sigma),  this.rfbucket/2);
-        rmin = Math.max(mean - 2. * Math.abs(sigma), -this.rfbucket/2);
+        rmax = Math.min(mean + 2. * Math.abs(sigma),  this.rfbucket);
+        rmin = Math.max(mean - 2. * Math.abs(sigma), -this.rfbucket);
         f1rf.setRange(rmin, rmax);
 //        System.out.println(mean + " " + sigma + " " + rmin + " " + rmax);
         DataFitter.fit(f1rf, hirfcenter, "Q"); //No options uses error for sigma 
