@@ -14,7 +14,7 @@ endif
 echo "Building rfCalib..."
     mvn install
     mvn package
-    cp target/clas12calibration-rf-2.0.jar lib/
+    cp target/clas12calibration-rf-*.jar lib/
     cd ..
 
 
