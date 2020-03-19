@@ -1,6 +1,7 @@
 package org.clas.modules;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.clas.tools.AdjustFit;
 import org.clas.viewer.CalibrationModule;
 import org.jlab.clas.pdg.PhysicsConstants;
@@ -13,16 +14,25 @@ import org.jlab.groot.group.DataGroup;
 import org.jlab.groot.math.F1D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.utils.groups.IndexedTable;
 
 public class RFoffsets extends CalibrationModule {
 
-
+    IndexedTable rfOffsets = null;
+        
     public RFoffsets(String name) {
         super(name);
-        this.setDetectorTabNames("RF1 vs. Sector", "RF2 vs. Sector", "RF Offsets");
-        this.init("RF1offset:\u03B4(RF1offset):RF1sigma:\u03B4(RF1sigma):RF2offset:\u03B4(RF2offset):RF2sigma:\u03B4(RF2sigma)");
-        this.getCalibrationTable().addConstraint(5, 0.03, 0.2);
-        this.getCalibrationTable().addConstraint(9, 0.03, 0.2);
+        
+        this.getCcdb().setVariation("default");
+        this.getCcdb().init(Arrays.asList(new String[]{"/calibration/eb/rf/offset"}));
+
+        
+        this.setDetectorTabNames("Previous Calibration", "RF1 vs. Sector", "RF2 vs. Sector", "RF Offsets");
+        this.init("RF1offset:\u03B4(RF1offset):\u0394(RF1):RF1sigma:\u03B4(RF1sigma):RF2offset:\u03B4(RF2offset):\u0394(RF2):RF2sigma:\u03B4(RF2sigma)");
+        this.getCalibrationTable().addConstraint(5,  -0.01, 0.01);
+        this.getCalibrationTable().addConstraint(6,   0.03, 0.08);
+        this.getCalibrationTable().addConstraint(10, -0.01, 0.01);
+        this.getCalibrationTable().addConstraint(11,  0.03, 0.08);
     }
 
     @Override
@@ -63,12 +73,44 @@ public class RFoffsets extends CalibrationModule {
         grf2sigma.setTitleY("RF sigma (ns)");
         grf2sigma.setMarkerColor(4);
         grf2sigma.setMarkerSize(3);
+        GraphErrors grf1corrmean = new GraphErrors("grf1corrmean");
+        grf1corrmean.setTitle("RF offset");
+        grf1corrmean.setTitleX("Run Number");
+        grf1corrmean.setTitleY("RF offset (ns)");
+        grf1corrmean.setMarkerColor(2);
+        grf1corrmean.setMarkerSize(3);
+        grf1corrmean.setMarkerStyle(3);
+        GraphErrors grf2corrmean = new GraphErrors("grf2corrmean");
+        grf2corrmean.setTitle("RF offset");
+        grf2corrmean.setTitleX("Run Number");
+        grf2corrmean.setTitleY("RF offset (ns)");
+        grf2corrmean.setMarkerColor(5);
+        grf2corrmean.setMarkerSize(3);
+        grf2corrmean.setMarkerStyle(3);
+        GraphErrors grf1corrsigma = new GraphErrors("grf1corrsigma");
+        grf1corrsigma.setTitle("RF sigma");
+        grf1corrsigma.setTitleX("Run Number");
+        grf1corrsigma.setTitleY("RF sigma (ns)");
+        grf1corrsigma.setMarkerColor(2);
+        grf1corrsigma.setMarkerSize(3);
+        grf1corrsigma.setMarkerStyle(3);
+        GraphErrors grf2corrsigma = new GraphErrors("grf2corrsigma");
+        grf2corrsigma.setTitle("RF sigma");
+        grf2corrsigma.setTitleX("Run Number");
+        grf2corrsigma.setTitleY("RF sigma (ns)");
+        grf2corrsigma.setMarkerColor(5);
+        grf2corrsigma.setMarkerSize(3);
+        grf2corrsigma.setMarkerStyle(3);
         DataGroup dg = new DataGroup(2, 1);
         this.setDetectorSummary(dg);
         this.getCalibrationSummary().addDataSet(grf1mean, 0);
         this.getCalibrationSummary().addDataSet(grf2mean, 0);
         this.getCalibrationSummary().addDataSet(grf1sigma, 1);
         this.getCalibrationSummary().addDataSet(grf2sigma, 1);
+        this.getCalibrationSummary().addDataSet(grf1corrmean, 0);
+        this.getCalibrationSummary().addDataSet(grf2corrmean, 0);
+        this.getCalibrationSummary().addDataSet(grf1corrsigma, 1);
+        this.getCalibrationSummary().addDataSet(grf2corrsigma, 1);
     }
     @Override
     public void createHistos(int run) {
@@ -106,13 +148,49 @@ public class RFoffsets extends CalibrationModule {
         f2.setLineWidth(2);
         f2.setLineColor(2);
         f2.setOptStat("1111");
-        DataGroup dg = new DataGroup(2, 8);
+        H1F rf1corr = new H1F("rf1corr_"+run, "rf1corr_"+run, nbin, -this.rfbucket, this.rfbucket);
+        rf1corr.setTitleX("RF1 offset");
+        rf1corr.setTitleY("Counts");
+        rf1corr.setFillColor(2);
+        H1F rf2corr = new H1F("rf2corr_"+run, "rf2corr_"+run, nbin, -this.rfbucket, this.rfbucket);
+        rf2corr.setTitleX("RF2 offset");
+        rf2corr.setTitleY("Counts");
+        rf2corr.setFillColor(5);
+        H1F rf1corrcenter = new H1F("rf1corrcenter_"+run, "rf1corrcenter_"+run, nbin, -this.rfbucket, this.rfbucket);
+        rf1corrcenter.setTitleX("RF1 offset");
+        rf1corrcenter.setTitleY("Counts");
+        rf1corrcenter.setFillColor(2);
+        H1F rf2corrcenter = new H1F("rf2corrcenter_"+run, "rf2corrcenter_"+run, nbin, -this.rfbucket, this.rfbucket);
+        rf2corrcenter.setTitleX("RF2 offset");
+        rf2corrcenter.setTitleY("Counts");
+        rf2corrcenter.setFillColor(5);
+        F1D f1corr = new F1D("f1corr_"+run, "[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        f1corr.setParameter(0, 0);
+        f1corr.setParameter(1, 0);
+        f1corr.setParameter(2, 0.2);
+        f1corr.setLineWidth(2);
+        f1corr.setLineColor(1);
+        f1corr.setOptStat("1111");
+        F1D f2corr = new F1D("f2corr_"+run, "[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        f2corr.setParameter(0, 0);
+        f2corr.setParameter(1, 0);
+        f2corr.setParameter(2, 0.2);
+        f2corr.setLineWidth(2);
+        f2corr.setLineColor(1);
+        f2corr.setOptStat("1111");
+        DataGroup dg = new DataGroup(2, 9);
         dg.addDataSet(rf1, 0);
         dg.addDataSet(rf2, 1);
         dg.addDataSet(rf1center, 2);
         dg.addDataSet(rf2center, 3);
         dg.addDataSet(f1, 2);
         dg.addDataSet(f2, 3);
+        dg.addDataSet(rf1corr, 16);
+        dg.addDataSet(rf2corr, 17);
+        dg.addDataSet(rf1corrcenter, 16);
+        dg.addDataSet(rf2corrcenter, 17);
+        dg.addDataSet(f1corr, 16);
+        dg.addDataSet(f2corr, 17);        
         for(int isec=1; isec<=6; isec++) {
             H1F rf1sec = new H1F("rf1_"+isec+"_"+run, "rf1_"+isec+"_"+run, nbin, -this.rfbucket, this.rfbucket);
             rf1sec.setTitleX("Sector " + isec);
@@ -194,11 +272,33 @@ public class RFoffsets extends CalibrationModule {
             this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").draw(this.getDataGroup().get(run).getH1F("rf2center_"+isec+"_"+run));
             this.getCalibrationCanvas().getCanvas("RF2 vs. Sector").draw(this.getDataGroup().get(run).getF1D("f2_"+isec+"_"+run), "same");
         }
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").divide(2, 2);
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").setGridX(false);
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").setGridY(false);
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").cd(0);
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getDataGroup().get(run).getH1F("rf1corrcenter_"+run));
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getDataGroup().get(run).getF1D("f1corr_"+run), "same");
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").cd(1);
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getDataGroup().get(run).getH1F("rf2corrcenter_"+run));
+        this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getDataGroup().get(run).getF1D("f2corr_"+run), "same");
+        if(this.getCalibrationSummary().getGraph("grf1corrmean").getDataSize(0)>1) {
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").cd(2);
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getCalibrationSummary().getGraph("grf1corrmean"));
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getCalibrationSummary().getGraph("grf2corrmean"), "same");
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").getPad(2).getAxisY().setRange(-this.rfbucket/2, this.rfbucket/2);
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").cd(3);
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getCalibrationSummary().getGraph("grf1corrsigma"));
+            this.getCalibrationCanvas().getCanvas("Previous Calibration").draw(this.getCalibrationSummary().getGraph("grf2corrsigma"), "same");
+//            this.getCalibrationCanvas().getCanvas("RF Offsets").getPad(3).getAxisY().setRange(0.1, 0.20);
+        }
     }
 
     @Override
     public void processEvent(DataEvent event) {
 
+        // get previous constants from CCDB
+        rfOffsets = this.getCcdb().getConstants(this.getRunNumber(), "/calibration/eb/rf/offset");
+        
         // process event info and save into data group
         ArrayList<Integer> rf1 = new ArrayList();
         ArrayList<Integer> rf2 = new ArrayList();
@@ -242,9 +342,13 @@ public class RFoffsets extends CalibrationModule {
                     double startTime = time - path / PhysicsConstants.speedOfLight();
                     for (int k = 0; k < bankRF.rows(); k++) {
                         int id = bankRF.getInt("id", k);
-                        double dt = (startTime - bankRF.getFloat("time", k) + (this.targetPos - recEl.vz())/PhysicsConstants.speedOfLight() + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
+                        double dt     = (startTime - bankRF.getFloat("time", k) + 
+                                        (this.targetPos - recEl.vz())/PhysicsConstants.speedOfLight() + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
+                        double dtCorr = (startTime - bankRF.getFloat("time", k) - rfOffsets.getDoubleValue("offset", 1, 1, id) +
+                                        (this.targetPos - recEl.vz())/PhysicsConstants.speedOfLight() + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
                         this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "_" + this.getRunNumber()).fill(dt);
                         this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "_" + sector + "_" + this.getRunNumber()).fill(dt);
+                        this.getDataGroup().get(this.getRunNumber()).getH1F("rf" + id + "corr_" + this.getRunNumber()).fill(dtCorr);
                     }
                 }
             }
@@ -280,6 +384,12 @@ public class RFoffsets extends CalibrationModule {
                     this.getDataGroup().get(run).getH1F("rf2center_"+isec+"_"+run),
                     this.getDataGroup().get(run).getF1D("f2_"+isec+"_"+run));
         }
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf1corr_"+run),
+                this.getDataGroup().get(run).getH1F("rf1corrcenter_"+run),
+                this.getDataGroup().get(run).getF1D("f1corr_"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf2corr_"+run),
+                this.getDataGroup().get(run).getH1F("rf2corrcenter_"+run),
+                this.getDataGroup().get(run).getF1D("f2corr_"+run));
         if (!this.getCalibrationTable().hasEntry(0, 0, this.getRunNumber())) {
             this.getCalibrationTable().addEntry(0, 0, this.getRunNumber());
         }
@@ -299,10 +409,27 @@ public class RFoffsets extends CalibrationModule {
         double rf2meanerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(1).error();
         double rf2sigma = Math.abs(this.getDataGroup().get(run).getF1D("f2_"+run).getParameter(2));
         double rf2sigmaerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(2).error();
+        
         this.getCalibrationSummary().getGraph("grf1mean").addPoint(this.getRunNumber(), rf1mean, 0, rf1meanerror);
         this.getCalibrationSummary().getGraph("grf2mean").addPoint(this.getRunNumber(), rf2mean, 0, rf2meanerror);
         this.getCalibrationSummary().getGraph("grf1sigma").addPoint(this.getRunNumber(), rf1sigma, 0, rf1sigmaerror);
         this.getCalibrationSummary().getGraph("grf2sigma").addPoint(this.getRunNumber(), rf2sigma, 0, rf1sigmaerror);        
+
+        
+        double rf1corrmean = this.getDataGroup().get(run).getF1D("f1corr_"+run).getParameter(1);
+        double rf1corrmeanerror = this.getDataGroup().get(run).getF1D("f1corr_"+run).parameter(1).error();
+        double rf1corrsigma = Math.abs(this.getDataGroup().get(run).getF1D("f1corr_"+run).getParameter(2));
+        double rf1corrsigmaerror = this.getDataGroup().get(run).getF1D("f1corr_"+run).parameter(2).error();
+        double rf2corrmean = this.getDataGroup().get(run).getF1D("f2corr_"+run).getParameter(1);
+        double rf2corrmeanerror = this.getDataGroup().get(run).getF1D("f2corr_"+run).parameter(1).error();
+        double rf2corrsigma = Math.abs(this.getDataGroup().get(run).getF1D("f2corr_"+run).getParameter(2));
+        double rf2corrsigmaerror = this.getDataGroup().get(run).getF1D("f2corr_"+run).parameter(2).error();
+
+        this.getCalibrationSummary().getGraph("grf1corrmean").addPoint(this.getRunNumber(), rf1corrmean, 0, rf1corrmeanerror);
+        this.getCalibrationSummary().getGraph("grf2corrmean").addPoint(this.getRunNumber(), rf2corrmean, 0, rf2corrmeanerror);
+        this.getCalibrationSummary().getGraph("grf1corrsigma").addPoint(this.getRunNumber(), rf1corrsigma, 0, rf1corrsigmaerror);
+        this.getCalibrationSummary().getGraph("grf2corrsigma").addPoint(this.getRunNumber(), rf2corrsigma, 0, rf1corrsigmaerror);        
+
     }
     
     public void fitRF(H1F hirf, H1F hirfcenter, F1D f1rf) {
@@ -364,12 +491,18 @@ public class RFoffsets extends CalibrationModule {
         double rf2sigma = Math.abs(this.getDataGroup().get(run).getF1D("f2_"+run).getParameter(2));
         double rf2sigmaerror = this.getDataGroup().get(run).getF1D("f2_"+run).parameter(2).error();
 
+        rfOffsets = this.getCcdb().getConstants(run, "/calibration/eb/rf/offset");
+        double deltarf1 = (rf1mean-rfOffsets.getDoubleValue("offset", 1,1,1) + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2; 
+        double deltarf2 = (rf2mean-rfOffsets.getDoubleValue("offset", 1,1,2) + 120.5 * this.rfbucket) % this.rfbucket - this.rfbucket/2;
+        
         this.getCalibrationTable().setDoubleValue(rf1mean, "RF1offset", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf1meanerror, "\u03B4(RF1offset)", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(deltarf1, "\u0394(RF1)", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf1sigma, "RF1sigma", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf1sigmaerror, "\u03B4(RF1sigma)", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf2mean, "RF2offset", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf2meanerror, "\u03B4(RF2offset)", 0, 0, run);
+        this.getCalibrationTable().setDoubleValue(deltarf2, "\u0394(RF2)", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf2sigma, "RF2sigma", 0, 0, run);
         this.getCalibrationTable().setDoubleValue(rf2sigmaerror, "\u03B4(RF2sigma)", 0, 0, run);
         getCalibrationTable().fireTableDataChanged();   
