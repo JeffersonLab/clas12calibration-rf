@@ -314,6 +314,7 @@ public class RFsignals extends CalibrationModule {
         if(event.hasBank("RUN::config")){
 	    DataBank head = event.getBank("RUN::config");
             int runNumber    = head.getInt("run", 0);
+            if(runNumber==0) return;
             rfConfig = this.getCcdb().getConstants(runNumber, "/calibration/eb/rf/config");
             double run_tdc2Time = rfConfig.getDoubleValue("tdc2time",1,1,1);
             double run_rfbucket = rfConfig.getDoubleValue("clock",1,1,1);
