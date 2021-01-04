@@ -2,6 +2,7 @@ package org.clas.modules;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import org.clas.tools.AdjustFit;
 import org.clas.viewer.CalibrationModule;
 import org.jlab.groot.data.GraphErrors;
 import org.jlab.groot.data.H1F;
@@ -30,6 +31,17 @@ public class RFsignals extends CalibrationModule {
         this.getCalibrationTable().addConstraint(9, 0.01, 0.05);
     }
 
+    @Override
+    public void adjustFit() {
+        int run = this.getViewRun();
+        if(run==0) run = this.getRunNumber();
+        System.out.println("Adjusting fit for run " + run);
+        H1F hrf = this.getDataGroup().get(run).getH1F("rfdiffAve_" + run);
+        F1D fun  = this.getDataGroup().get(run).getF1D("fdiffAve_" + run);
+        AdjustFit cfit = new AdjustFit(hrf, fun, "LRQ");
+        this.getCalibrationCanvas().getCanvas("RF Time").update();
+        this.updateTable(run);
+    }
     
     @Override
     public void createHistos(int run) {
