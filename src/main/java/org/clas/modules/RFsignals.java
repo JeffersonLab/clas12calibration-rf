@@ -337,7 +337,7 @@ public class RFsignals extends CalibrationModule {
                 this.ncycles  = run_ncycles;                
                 this.period   = rfbucket*ncycles;
                 this.resetEventListener();
-                System.out.println("RF config parameter changed to: \n\t tdc2time = " + this.tdc2time + "\n\t rf bucket = " + this.rfbucket + "\n\t n. of cycles = " + this.ncycles);
+                System.out.println(this.getClass().getName() + ": RF config parameter changed to: \n\t tdc2time = " + this.tdc2time + "\n\t rf bucket = " + this.rfbucket + "\n\t n. of cycles = " + this.ncycles);
             }
 //            System.out.println();
         }        

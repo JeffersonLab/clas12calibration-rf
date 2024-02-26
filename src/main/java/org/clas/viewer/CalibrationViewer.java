@@ -580,8 +580,8 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                     hipoReader.close();
                     for (int k = 0; k < this.monitors.length; k++) {
                         this.monitors[k].analyze();
-                        this.monitors[k].fillSummary(this.getRunNumber(event));
-                        this.monitors[k].plotHistos(this.getRunNumber(event));
+                        this.monitors[k].fillSummary(this.runNumber);
+                        this.monitors[k].plotHistos(this.runNumber);
 //                            this.monitors[k]..getDetectorCanvas().u
                     }
                     nf++;
