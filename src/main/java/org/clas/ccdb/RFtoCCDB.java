@@ -139,6 +139,7 @@ public class RFtoCCDB {
         }
         
         int old=0;
+        int last = (int) dg.getGraph("RFoffset1").getDataX(dg.getGraph("RFoffset1").getDataSize(0)-1);
         for(int run : rfs.keySet()) {
             FileWriter writer = new FileWriter("rf_"+run+".txt");
             BufferedWriter bufferedWriter = new BufferedWriter(writer);
@@ -150,6 +151,7 @@ public class RFtoCCDB {
                 System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+old+".txt -r "+old+"-"+(run-1)+" #\"offsets from run "+old+"\"");
             old = run;
         }
+        System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+old+".txt -r "+old+"-"+last+" #\"offsets from run "+old+"\"");
     }
     
     public void plot() {
