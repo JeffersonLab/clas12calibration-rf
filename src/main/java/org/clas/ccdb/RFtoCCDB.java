@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.groot.base.GStyle;
@@ -25,12 +26,12 @@ public class RFtoCCDB {
  
     
 
-    private String offsetsFile = null;
+    private List<String> offsetsFile = null;
     private double threshold = 0.005;
     private String fontName = "Arial";
     private DataGroup dg = new DataGroup(1,3);
 
-    public RFtoCCDB(String file, double t) {
+    public RFtoCCDB(List<String> file, double t) {
         this.offsetsFile = file;
         this.threshold = t;
         
@@ -79,55 +80,40 @@ public class RFtoCCDB {
 
     public void readOffsets() throws IOException {
         
-        Map<Integer,RF[]> rfs = new LinkedHashMap<>();
+        Map<Integer,RF[]> rfs = new TreeMap<>();
         
         FileReader fileReader = null;
         try {
-            fileReader = new FileReader(offsetsFile);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            String line = null;
-            int old = 0;
-            while ((line = bufferedReader.readLine()) != null) {
-                String[] cols = line.split("\\s+");
-    //            System.out.println(line);
-                if(cols.length==13) {
-                    int run   = Integer.parseInt(cols[2].trim());
-                    RF[] rf12 = new RF[2];
-                    for(int i=0; i<2; i++) {
-                        rf12[i] = new RF(Double.parseDouble(cols[3+i*5].trim()),
-                                         Double.parseDouble(cols[4+i*5].trim()),
-                                         Double.parseDouble(cols[5+i*5].trim()),
-                                         Double.parseDouble(cols[6+i*5].trim()));
-                    }
-                    if(!rf12[0].isValid() || !rf12[1].isValid()) {
-                        continue;
-                    } 
-                    for(int i=0; i<2; i++) {
-                        dg.getGraph("RFoffset"+(i+1)).addPoint(run, rf12[i].offset, 0, rf12[i].error);
-                        dg.getGraph("RFdelta"+(i+1)).addPoint(run, rf12[i].delta, 0, rf12[i].error);
-                        dg.getGraph("RFsigma"+(i+1)).addPoint(run, rf12[i].sigma, 0, rf12[i].error);
-                    }
-                    if(!rfs.isEmpty()) {
-                        RF[] previous = rfs.get(old);
-                        if(!rf12[0].equals(previous[0], threshold) || !rf12[1].equals(previous[1], threshold)) {
-                            rfs.put(run, rf12);
-                            old = run;
+            for(String f : offsetsFile) {
+                fileReader = new FileReader(f);
+                BufferedReader bufferedReader = new BufferedReader(fileReader);
+                String line = null;
+                int old = 0;
+                while ((line = bufferedReader.readLine()) != null) {
+                    String[] cols = line.split("\\s+");
+        //            System.out.println(line);
+                    if(cols.length==13) {
+                        int run   = Integer.parseInt(cols[2].trim());
+                        RF[] rf12 = new RF[2];
+                        for(int i=0; i<2; i++) {
+                            rf12[i] = new RF(Double.parseDouble(cols[3+i*5].trim()),
+                                             Double.parseDouble(cols[4+i*5].trim()),
+                                             Double.parseDouble(cols[5+i*5].trim()),
+                                             Double.parseDouble(cols[6+i*5].trim()));
+                        }
+                        if(!rf12[0].isValid() || !rf12[1].isValid()) {
+                            continue;
+                        } 
+                        rfs.put(run, rf12);
+                        for(int i=0; i<2; i++) {
+                            dg.getGraph("RFoffset"+(i+1)).addPoint(run, rf12[i].offset, 0, rf12[i].error);
+                            dg.getGraph("RFdelta"+(i+1)).addPoint(run, rf12[i].delta, 0, rf12[i].error);
+                            dg.getGraph("RFsigma"+(i+1)).addPoint(run, rf12[i].sigma, 0, rf12[i].error);
                         }
                     }
-                    else if(rf12[0].isNew(threshold) || rf12[1].isNew(threshold)) {
-                        rfs.put(run, rf12);                         
-                        old = run;
-                    }
-    //                System.out.println(old);
-                    for(int i=0; i<2; i++) {
-                        dg.getGraph("RFoffset"+(i+1)).addPoint(run, rf12[i].offset, 0, rf12[i].error);
-                        dg.getGraph("RFccdb"+(i+1)).addPoint(run, rfs.get(old)[i].offset, 0, rfs.get(old)[i].error);
-                        dg.getGraph("RFdelta"+(i+1)).addPoint(run, rf12[i].delta, 0, rf12[i].error);
-                        dg.getGraph("RFsigma"+(i+1)).addPoint(run, rf12[i].sigma, 0, rf12[i].error);
-                    }
-                }
-            }           
-            bufferedReader.close();
+                }           
+                bufferedReader.close();
+            }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
@@ -137,21 +123,54 @@ public class RFtoCCDB {
                 Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        int old=0;
-        int last = (int) dg.getGraph("RFoffset1").getDataX(dg.getGraph("RFoffset1").getDataSize(0)-1);
+        int first=0;        
+        int last=0;        
         for(int run : rfs.keySet()) {
-            FileWriter writer = new FileWriter("rf_"+run+".txt");
+            RF[] rf12 = rfs.get(run);
+            if(first==0) {
+                first = run;
+                last  = run;
+            }
+            else {
+                RF[] previous = rfs.get(first);
+                if(rf12[0].equals(previous[0], threshold) && rf12[1].equals(previous[1], threshold)) {
+                    last = run;
+                }
+                else {
+                    if(previous[0].isNew(threshold) || previous[1].isNew(threshold)) {
+                        this.write2CCDB(first, last, previous);
+                    }
+                    first = run;
+                    last  = run;
+                }
+            }
+            for(int i=0; i<2; i++) {
+                dg.getGraph("RFccdb"+(i+1)).addPoint(run, rfs.get(first)[i].offset, 0, rfs.get(first)[i].error);            
+            }        
+        }
+        if(first<last)
+            this.write2CCDB(first, last, rfs.get(first));
+    }
+    
+    private void write2CCDB(int min, int max, RF[] rf12) {
+        FileWriter writer = null;
+        try {
+            writer = new FileWriter("rf_"+min+".txt");
             BufferedWriter bufferedWriter = new BufferedWriter(writer);
             for(int i=0; i<2; i++) {
-                bufferedWriter.write(" 1 1 "+(i+1)+" "+rfs.get(run)[i].offset+" "+rfs.get(run)[i].sigma+"\n");
+                bufferedWriter.write(" 1 1 "+(i+1)+" "+rf12[i].offset+" "+rf12[i].sigma+"\n");
             }
             bufferedWriter.close();
-            if(old>0)
-                System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+old+".txt -r "+old+"-"+(run-1)+" #\"offsets from run "+old+"\"");
-            old = run;
+            System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+min+".txt -r "+min+"-"+max+" #\"offsets from run "+min+"\"");
+        } catch (IOException ex) {
+            Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException ex) {
+                Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-        System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+old+".txt -r "+old+"-"+last+" #\"offsets from run "+old+"\"");
     }
     
     public void plot() {
@@ -205,7 +224,7 @@ public class RFtoCCDB {
         List<String> files = parser.getInputList();
         double threshold = parser.getOption("-t").doubleValue();
         
-        RFtoCCDB rf = new RFtoCCDB(files.get(0), threshold);
+        RFtoCCDB rf = new RFtoCCDB(files, threshold);
                 
         try {
             rf.readOffsets();
