@@ -85,7 +85,9 @@ public class RFtoCCDB {
             sigma.setMarkerSize(4);
             dg.addDataSet(sigma, 2);
         }
-        System.out.println("\nProcessing file " + this.offsetsFile + " with threshold set to " + this.threshold);
+        System.out.println("\nProcessing file " + this.offsetsFile + " with:\n" +
+                "\t - threshold set to " + this.threshold + " ns\n"+
+                "\t - max sigma set to " + this.maxsigma + " ns");
     }
 
     public void readOffsets() throws IOException {
