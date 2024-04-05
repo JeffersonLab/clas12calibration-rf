@@ -28,13 +28,15 @@ public class RFtoCCDB {
 
     private List<String> offsetsFile = null;
     private double threshold = 0.005;
+    private double maxsigma = 0.1;
     private boolean update = true;
     private String fontName = "Arial";
     private DataGroup dg = new DataGroup(1,3);
 
-    public RFtoCCDB(List<String> file, double t, boolean update) {
+    public RFtoCCDB(List<String> file, double t, double s, boolean update) {
         this.offsetsFile = file;
         this.threshold = t;
+        this.maxsigma = s;
         this.update = update;
         
         GStyle.getAxisAttributesX().setTitleFontSize(18);
@@ -214,7 +216,7 @@ public class RFtoCCDB {
         }
         
         public boolean isValid() {
-            return Math.abs(error)<0.01 && Math.abs(sigma)<0.1;
+            return Math.abs(error)<0.01 && Math.abs(sigma)<maxsigma;
         }
         
         public boolean isNew(double threshold) {
@@ -242,13 +244,15 @@ public class RFtoCCDB {
         parser.setRequiresInputList(true);
         parser.addOption("-t", "0.005", "minimum offset variation (ns)");
         parser.addOption("-r", "1", "disregard run ranges where new and old constants are within the threshold (0) or get range anyway (1)");
+        parser.addOption("-s", "0.1", "maximum sigma value");
 
         parser.parse(args);
         List<String> files = parser.getInputList();
         double threshold = parser.getOption("-t").doubleValue();
+        double maxsigma  = parser.getOption("-s").doubleValue();
         boolean update   = parser.getOption("-r").intValue()==1;
         
-        RFtoCCDB rf = new RFtoCCDB(files, threshold, update);
+        RFtoCCDB rf = new RFtoCCDB(files, threshold, maxsigma, update);
                 
         try {
             rf.readOffsets();
