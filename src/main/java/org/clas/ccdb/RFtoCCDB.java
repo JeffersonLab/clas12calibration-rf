@@ -27,29 +27,31 @@ public class RFtoCCDB {
     
 
     private List<String> offsetsFile = null;
-    private double threshold = 0.005;
-    private double maxsigma = 0.1;
-    private boolean update = true;
-    private String fontName = "Arial";
-    private DataGroup dg = new DataGroup(1,3);
+    private static double THRESHOLD = 0.005;
+    private static double MAXSIGMA = 0.1;
+    private static boolean UPDATE = true;
+    private static boolean SKIP = true;
+    private static final String FONTNAME = "Arial";
+    private final DataGroup dg = new DataGroup(1,3);
 
-    public RFtoCCDB(List<String> file, double t, double s, boolean update) {
+    public RFtoCCDB(List<String> file, double t, double s, boolean update, boolean skip) {
         this.offsetsFile = file;
-        this.threshold = t;
-        this.maxsigma = s;
-        this.update = update;
+        THRESHOLD = t;
+        MAXSIGMA = s;
+        UPDATE = update;
+        SKIP = skip;
         
         GStyle.getAxisAttributesX().setTitleFontSize(18);
         GStyle.getAxisAttributesX().setLabelFontSize(14);
         GStyle.getAxisAttributesY().setTitleFontSize(18);
         GStyle.getAxisAttributesY().setLabelFontSize(14);
         GStyle.getAxisAttributesZ().setLabelFontSize(14);
-        GStyle.getAxisAttributesX().setLabelFontName(this.fontName);
-        GStyle.getAxisAttributesY().setLabelFontName(this.fontName);
-        GStyle.getAxisAttributesZ().setLabelFontName(this.fontName);
-        GStyle.getAxisAttributesX().setTitleFontName(this.fontName);
-        GStyle.getAxisAttributesY().setTitleFontName(this.fontName);
-        GStyle.getAxisAttributesZ().setTitleFontName(this.fontName);
+        GStyle.getAxisAttributesX().setLabelFontName(FONTNAME);
+        GStyle.getAxisAttributesY().setLabelFontName(FONTNAME);
+        GStyle.getAxisAttributesZ().setLabelFontName(FONTNAME);
+        GStyle.getAxisAttributesX().setTitleFontName(FONTNAME);
+        GStyle.getAxisAttributesY().setTitleFontName(FONTNAME);
+        GStyle.getAxisAttributesZ().setTitleFontName(FONTNAME);
         GStyle.setGraphicsFrameLineWidth(1);
         GStyle.getH1FAttributes().setLineWidth(2);
 
@@ -86,13 +88,13 @@ public class RFtoCCDB {
             dg.addDataSet(sigma, 2);
         }
         System.out.println("\nProcessing file " + this.offsetsFile + " with:\n" +
-                "\t - threshold set to " + this.threshold + " ns\n"+
-                "\t - max sigma set to " + this.maxsigma + " ns");
+                "\t - threshold set to " + THRESHOLD + " ns\n"+
+                "\t - max sigma set to " + MAXSIGMA + " ns");
     }
 
     public void readOffsets() throws IOException {
         
-        Map<Integer,RF[]> rfs = new TreeMap<>();
+        Map<Integer,RFentry> rfs = new TreeMap<>();
         
         FileReader fileReader = null;
         try {
@@ -106,22 +108,14 @@ public class RFtoCCDB {
         //            System.out.println(line);
                     if(cols.length==13) {
                         int run   = Integer.parseInt(cols[2].trim());
-                        RF[] rf12 = new RF[2];
+                        RFentry rfEntry = new RFentry(run);
                         for(int i=0; i<2; i++) {
-                            rf12[i] = new RF(Double.parseDouble(cols[3+i*5].trim()),
-                                             Double.parseDouble(cols[4+i*5].trim()),
-                                             Double.parseDouble(cols[5+i*5].trim()),
-                                             Double.parseDouble(cols[6+i*5].trim()));
+                            rfEntry.setRF(i+1,Double.parseDouble(cols[3+i*5].trim()),
+                                              Double.parseDouble(cols[4+i*5].trim()),
+                                              Double.parseDouble(cols[5+i*5].trim()),
+                                              Double.parseDouble(cols[6+i*5].trim()));
                         }
-                        if(!rf12[0].isValid() && !rf12[1].isValid()) {
-                            continue;
-                        } 
-                        rfs.put(run, rf12);
-                        for(int i=0; i<2; i++) {
-                            dg.getGraph("RFoffset"+(i+1)).addPoint(run, rf12[i].offset, 0, rf12[i].error);
-                            dg.getGraph("RFdelta"+(i+1)).addPoint(run, rf12[i].delta, 0, rf12[i].error);
-                            dg.getGraph("RFsigma"+(i+1)).addPoint(run, rf12[i].sigma, 0, rf12[i].error);
-                        }
+                        rfs.put(run, rfEntry);
                     }
                 }           
                 bufferedReader.close();
@@ -135,60 +129,55 @@ public class RFtoCCDB {
                 Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        int first=0;        
-        int last=0;        
-        for(int run : rfs.keySet()) {
-            RF[] rf12 = rfs.get(run);
-            if(first==0) {
-                first = run;
-                last  = run;
-            }
-            else {
-                RF[] previous = rfs.get(first);
-                if(rf12[0].equals(previous[0], threshold) && rf12[1].equals(previous[1], threshold)) {
-                    last = run;
-                }
-                else {
-                    if(previous[0].isNew(threshold) || previous[1].isNew(threshold) || this.update) {
-                        this.write2CCDB(first, last, previous);
+
+        for(int i=0; i<2; i++) {
+            int id = i+1;
+            RFentry previous = null;
+            int last = 0;
+            for(int run : rfs.keySet()) {
+                RFentry rfEntry = rfs.get(run);
+                last = run;
+                if(rfEntry.getRF(id).isValid()) {
+                    if(previous==null) {
+                        previous = rfEntry;
                     }
-                    else {
-                        for(int i=0; i<2; i++) {
-                            dg.getGraph("RFdone"+(i+1)).addPoint(run, previous[i].delta, 0, previous[i].error);            
-                        }               
+                    if(!rfEntry.getRF(id).equals(previous.getRF(id), THRESHOLD)) {
+                        previous.setRmax(run-1);
+                        previous = rfEntry;
                     }
-                    first = run;
-                    last  = run;
+                    rfEntry.setRmin(previous.getRun());
                 }
             }
-            for(int i=0; i<2; i++) {
-                dg.getGraph("RFccdb"+(i+1)).addPoint(run, rfs.get(first)[i].offset, 0, rfs.get(first)[i].error);            
-            }        
+            previous.setRmax(last);
         }
-        if(first<last)
-            this.write2CCDB(first, last, rfs.get(first));
+
+        for(int run : rfs.keySet()) {
+            RFentry rfEntry = rfs.get(run);
+            if(rfEntry.getRun()==rfEntry.getRmin()) {
+                if(rfEntry.getRF(1).isNew(THRESHOLD) || rfEntry.getRF(2).isNew(THRESHOLD) || UPDATE) {
+                    rfEntry.write2CCDB();
+                }
+            }
+        }
+
+        for(int run : rfs.keySet()) {
+            RFentry rfEntry = rfs.get(run);
+            for(int i=0; i<2; i++) {
+                int id = i+1;
+                RF rfi = rfEntry.getRF(id);
+                if(rfi.isValid() || !SKIP) {
+                    dg.getGraph("RFoffset"+id).addPoint(run, rfi.offset, 0, rfi.error);
+                    dg.getGraph("RFdelta"+id).addPoint(run, rfi.delta, 0, rfi.error);
+                    dg.getGraph("RFsigma"+id).addPoint(run, rfi.sigma, 0, rfi.error);
+                    RFentry rfRef = rfs.get(rfEntry.getRmin());
+                    dg.getGraph("RFccdb"+id).addPoint(run, rfRef.getRF(id).offset, 0, rfRef.getRF(id).error);   
+                    if(rfRef.getStatus()!=0) dg.getGraph("RFdone"+id).addPoint(run, rfRef.getRF(id).delta, 0, rfRef.getRF(id).error);            
+
+                }
+            }
+        }
     }
     
-    private void write2CCDB(int min, int max, RF[] rf12) {
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter("rf_"+min+".txt");
-            BufferedWriter bufferedWriter = new BufferedWriter(writer);
-            for(int i=0; i<2; i++) {
-                bufferedWriter.write(" 1 1 "+(i+1)+" "+rf12[i].offset+" "+rf12[i].sigma+"\n");
-            }
-            bufferedWriter.close();
-            System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+min+".txt -r "+min+"-"+max+" #\"offsets from run "+min+"\"");
-        } catch (IOException ex) {
-            Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            try {
-                writer.close();
-            } catch (IOException ex) {
-                Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
     
     public void plot() {
         int ncol = dg.getColumns();
@@ -218,21 +207,90 @@ public class RFtoCCDB {
         }
         
         public boolean isValid() {
-            return Math.abs(error)<0.01 && Math.abs(sigma)<maxsigma;
+            return Math.abs(this.error)<0.01 && Math.abs(this.sigma)<MAXSIGMA;
         }
         
         public boolean isNew(double threshold) {
-            return Math.abs(delta)>threshold;
+            return Math.abs(this.delta)>threshold && this.isValid();
         }
         
         public boolean equals(RF o, double threshold) {
-            return Math.abs(this.offset-o.offset)<threshold;
+            return Math.abs(this.offset-o.offset)<threshold || !this.isValid() || !o.isValid();
         }
         
         @Override
         public String toString() {
-            String s = String.format("Offset=%.3f Error=%.3f Delta=%.3f Sigma=%.3f", offset, error, delta, sigma);
+            String s = String.format("Offset=%.3f Error=%.3f Delta=%.3f Sigma=%.3f", this.offset, this.error, this.delta, this.sigma);
             return s;
+        }
+    }
+    
+    public class RFentry {
+        
+        private RF[] rf12 = new RF[2];
+        private int run;
+        private int rmin;
+        private int rmax;
+        private int status;
+        
+        public RFentry(int run) {
+            this.run = run;
+        }
+        
+        public RFentry(int run, RF rf1, RF rf2) {
+            this.run = run;
+            this.rf12[0] = rf1;
+            this.rf12[1] = rf2;
+        }
+
+        public RF getRF(int id) {
+            return rf12[id-1];
+        }
+
+        public int getRun() {
+            return run;
+        }
+
+        public int getRmin() {
+            return rmin;
+        }
+        
+        public int getStatus() {
+            return status;
+        }
+        
+        public void setRF(int id, double offset, double error, double sigma, double delta) {
+            this.rf12[id-1] = new RF(offset, error, sigma, delta);
+        }
+        
+        public void setRmin(int run) {
+            if(run>this.rmin) this.rmin = run;
+        }
+        
+        public void setRmax(int run) {
+            if(run>0 && (run<this.rmax || this.rmax==0)) this.rmax = run;
+        }
+    
+        public void write2CCDB() {
+            FileWriter writer = null;
+            try {
+                writer = new FileWriter("rf_"+rmin+".txt");
+                BufferedWriter bufferedWriter = new BufferedWriter(writer);
+                for(int i=0; i<2; i++) {
+                    bufferedWriter.write(" 1 1 "+(i+1)+" "+rf12[i].offset+" "+rf12[i].sigma+"\n");
+                }
+                bufferedWriter.close();
+                System.out.println("ccdb -c mysql://clas12writer:geom3try@clasdb/clas12 add calibration/eb/rf/offset rf_"+rmin+".txt -r "+rmin+"-"+rmax+" #\"offsets from run "+rmin+"\"");
+                status = 1;
+            } catch (IOException ex) {
+                Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    writer.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
     
@@ -245,16 +303,18 @@ public class RFtoCCDB {
         // valid options for event-base analysis
         parser.setRequiresInputList(true);
         parser.addOption("-t", "0.005", "minimum offset variation (ns)");
-        parser.addOption("-r", "1", "disregard run ranges where new and old constants are within the threshold (0) or get range anyway (1)");
+        parser.addOption("-u", "1", "disregard run ranges where new and old constants are within the threshold (0) or update range anyway (1)");
         parser.addOption("-s", "0.1", "maximum sigma value");
+        parser.addOption("-x", "1", "do not plot invalid RFs (1/0)");
 
         parser.parse(args);
         List<String> files = parser.getInputList();
         double threshold = parser.getOption("-t").doubleValue();
         double maxsigma  = parser.getOption("-s").doubleValue();
-        boolean update   = parser.getOption("-r").intValue()==1;
+        boolean update   = parser.getOption("-u").intValue()==1;
+        boolean skip     = parser.getOption("-x").intValue()==1;
         
-        RFtoCCDB rf = new RFtoCCDB(files, threshold, maxsigma, update);
+        RFtoCCDB rf = new RFtoCCDB(files, threshold, maxsigma, update, skip);
                 
         try {
             rf.readOffsets();
