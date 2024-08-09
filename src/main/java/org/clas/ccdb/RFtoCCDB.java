@@ -113,7 +113,7 @@ public class RFtoCCDB {
                                              Double.parseDouble(cols[5+i*5].trim()),
                                              Double.parseDouble(cols[6+i*5].trim()));
                         }
-                        if(!rf12[0].isValid() || !rf12[1].isValid()) {
+                        if(!rf12[0].isValid() && !rf12[1].isValid()) {
                             continue;
                         } 
                         rfs.put(run, rf12);
