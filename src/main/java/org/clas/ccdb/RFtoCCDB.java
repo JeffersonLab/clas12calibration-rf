@@ -32,7 +32,6 @@ public class RFtoCCDB {
     private static boolean UPDATE = true;
     private static boolean SKIP = true;
     private static final String FONTNAME = "Arial";
-    private final DataGroup dg = new DataGroup(1,3);
 
     public RFtoCCDB(List<String> file, double t, double s, boolean update, boolean skip) {
         this.offsetsFile = file;
@@ -40,59 +39,13 @@ public class RFtoCCDB {
         MAXSIGMA = s;
         UPDATE = update;
         SKIP = skip;
-        
-        GStyle.getAxisAttributesX().setTitleFontSize(18);
-        GStyle.getAxisAttributesX().setLabelFontSize(14);
-        GStyle.getAxisAttributesY().setTitleFontSize(18);
-        GStyle.getAxisAttributesY().setLabelFontSize(14);
-        GStyle.getAxisAttributesZ().setLabelFontSize(14);
-        GStyle.getAxisAttributesX().setLabelFontName(FONTNAME);
-        GStyle.getAxisAttributesY().setLabelFontName(FONTNAME);
-        GStyle.getAxisAttributesZ().setLabelFontName(FONTNAME);
-        GStyle.getAxisAttributesX().setTitleFontName(FONTNAME);
-        GStyle.getAxisAttributesY().setTitleFontName(FONTNAME);
-        GStyle.getAxisAttributesZ().setTitleFontName(FONTNAME);
-        GStyle.setGraphicsFrameLineWidth(1);
-        GStyle.getH1FAttributes().setLineWidth(2);
 
-        for(int i=0; i<2; i++) {
-            GraphErrors offset = new GraphErrors("RFoffset"+(i+1));
-            offset.setTitleX("Run Number");
-            offset.setTitleY("Offset (ns)");
-            offset.setMarkerColor(3+i);
-            offset.setMarkerSize(4);
-            dg.addDataSet(offset, 0);
-            GraphErrors ccdb = new GraphErrors("RFccdb"+(i+1));
-            ccdb.setTitleX("Run Number");
-            ccdb.setTitleY("Offset (ns)");
-            ccdb.setMarkerColor(1);
-            ccdb.setMarkerSize(1);
-            dg.addDataSet(ccdb, 0);
-            GraphErrors delta = new GraphErrors("RFdelta"+(i+1));
-            delta.setTitleX("Run Number");
-            delta.setTitleY("(Offset - CCDB) (ns)");
-            delta.setMarkerColor(5+i);
-            delta.setMarkerSize(4);
-            dg.addDataSet(delta, 1);
-            GraphErrors done = new GraphErrors("RFdone"+(i+1));
-            done.setTitleX("Run Number");
-            done.setTitleY("Offset (ns)");
-            done.setMarkerColor(1);
-            done.setMarkerSize(1);
-            dg.addDataSet(done, 1);
-            GraphErrors sigma = new GraphErrors("RFsigma"+(i+1));
-            sigma.setTitleX("Run Number");
-            sigma.setTitleY("#sigma (ns)");
-            sigma.setMarkerColor(3+i);
-            sigma.setMarkerSize(4);
-            dg.addDataSet(sigma, 2);
-        }
         System.out.println("\nProcessing file " + this.offsetsFile + " with:\n" +
                 "\t - threshold set to " + THRESHOLD + " ns\n"+
                 "\t - max sigma set to " + MAXSIGMA + " ns");
     }
 
-    public void readOffsets() throws IOException {
+    public Map<Integer,RFentry> readOffsets() throws IOException {
         
         Map<Integer,RFentry> rfs = new TreeMap<>();
         
@@ -130,36 +83,115 @@ public class RFtoCCDB {
             }
         }
 
+        return rfs;
+    }
+
+    public void findRanges(Map<Integer,RFentry> rfs) {
+        // set range lower end
         for(int i=0; i<2; i++) {
             int id = i+1;
             RFentry previous = null;
-            int last = 0;
             for(int run : rfs.keySet()) {
                 RFentry rfEntry = rfs.get(run);
-                last = run;
                 if(rfEntry.getRF(id).isValid()) {
                     if(previous==null) {
                         previous = rfEntry;
                     }
                     if(!rfEntry.getRF(id).equals(previous.getRF(id), THRESHOLD)) {
-                        previous.setRmax(run-1);
                         previous = rfEntry;
                     }
                     rfEntry.setRmin(previous.getRun());
                 }
             }
-            previous.setRmax(last);
         }
 
+        // set range upper limit
+        RFentry previous = null;
+        int last = 0;
+        for(int run : rfs.keySet()) {
+            RFentry rfEntry = rfs.get(run);
+            last = run;
+            if(rfEntry.getRun()==rfEntry.getRmin()) {
+                if(previous!=null) {
+                    previous.setRmax(rfEntry.getRun()-1);
+                }
+                previous = rfEntry;
+            }
+        }
+        if(previous!=null) previous.setRmax(last);
+    }
+
+    public void printCCDBCommands(Map<Integer,RFentry> rfs) {
+        
         for(int run : rfs.keySet()) {
             RFentry rfEntry = rfs.get(run);
             if(rfEntry.getRun()==rfEntry.getRmin()) {
-                if(rfEntry.getRF(1).isNew(THRESHOLD) || rfEntry.getRF(2).isNew(THRESHOLD) || UPDATE) {
-                    rfEntry.write2CCDB();
+                for(int r=rfEntry.getRmin(); r<=rfEntry.getRmax(); r++) {
+                    if(rfs.containsKey(r)) {
+                        RFentry rEntry = rfs.get(r);
+                        if((rEntry.getRF(1).isValid() && rEntry.getRF(1).isNew(THRESHOLD)) || 
+                           (rEntry.getRF(2).isValid() && rEntry.getRF(2).isNew(THRESHOLD)) || 
+                            UPDATE) {
+                            rfEntry.write2CCDB();
+                            break;
+                        }
+                    }
                 }
             }
         }
 
+    }
+
+    public DataGroup plotRanges(Map<Integer,RFentry> rfs) {
+           
+        GStyle.getAxisAttributesX().setTitleFontSize(18);
+        GStyle.getAxisAttributesX().setLabelFontSize(14);
+        GStyle.getAxisAttributesY().setTitleFontSize(18);
+        GStyle.getAxisAttributesY().setLabelFontSize(14);
+        GStyle.getAxisAttributesZ().setLabelFontSize(14);
+        GStyle.getAxisAttributesX().setLabelFontName(FONTNAME);
+        GStyle.getAxisAttributesY().setLabelFontName(FONTNAME);
+        GStyle.getAxisAttributesZ().setLabelFontName(FONTNAME);
+        GStyle.getAxisAttributesX().setTitleFontName(FONTNAME);
+        GStyle.getAxisAttributesY().setTitleFontName(FONTNAME);
+        GStyle.getAxisAttributesZ().setTitleFontName(FONTNAME);
+        GStyle.setGraphicsFrameLineWidth(1);
+        GStyle.getH1FAttributes().setLineWidth(2);
+
+        DataGroup dg = new DataGroup(1,3);
+        for(int i=0; i<2; i++) {
+            GraphErrors offset = new GraphErrors("RFoffset"+(i+1));
+            offset.setTitleX("Run Number");
+            offset.setTitleY("Offset (ns)");
+            offset.setMarkerColor(3+i);
+            offset.setMarkerSize(4);
+            dg.addDataSet(offset, 0);
+            GraphErrors ccdb = new GraphErrors("RFccdb"+(i+1));
+            ccdb.setTitleX("Run Number");
+            ccdb.setTitleY("Offset (ns)");
+            ccdb.setMarkerColor(1);
+            ccdb.setMarkerSize(1);
+            dg.addDataSet(ccdb, 0);
+            GraphErrors delta = new GraphErrors("RFdelta"+(i+1));
+            delta.setTitleX("Run Number");
+            delta.setTitleY("(Offset - CCDB) (ns)");
+            delta.setMarkerColor(5+i);
+            delta.setMarkerSize(4);
+            dg.addDataSet(delta, 1);
+            GraphErrors done = new GraphErrors("RFdone"+(i+1));
+            done.setTitleX("Run Number");
+            done.setTitleY("Offset (ns)");
+            done.setMarkerColor(1);
+            done.setMarkerSize(1);
+            dg.addDataSet(done, 1);
+            GraphErrors sigma = new GraphErrors("RFsigma"+(i+1));
+            sigma.setTitleX("Run Number");
+            sigma.setTitleY("#sigma (ns)");
+            sigma.setMarkerColor(3+i);
+            sigma.setMarkerSize(4);
+            dg.addDataSet(sigma, 2);
+        }
+        
         for(int run : rfs.keySet()) {
             RFentry rfEntry = rfs.get(run);
             for(int i=0; i<2; i++) {
@@ -176,22 +208,25 @@ public class RFtoCCDB {
                 }
             }
         }
-    }
-    
-    
-    public void plot() {
-        int ncol = dg.getColumns();
-        int nrow = dg.getRows();
-        DataGroup dgn = new DataGroup(ncol, nrow);
-        for(int i=0; i<nrow*ncol; i++) {
-            for(IDataSet ds : dg.getData(i)) {
-                if(ds.getDataSize(0)>0)
-                    dgn.addDataSet(ds, i);
-            }
-        }
         TCanvas canvas = new TCanvas("RF", 1200, 1400);
-        canvas.getCanvas().draw(dgn);
+        canvas.getCanvas().draw(dg);
+        return dg;
     }
+    
+    
+//    public void plot() {
+//        int ncol = dg.getColumns();
+//        int nrow = dg.getRows();
+//        DataGroup dgn = new DataGroup(ncol, nrow);
+//        for(int i=0; i<nrow*ncol; i++) {
+//            for(IDataSet ds : dg.getData(i)) {
+//                if(ds.getDataSize(0)>0)
+//                    dgn.addDataSet(ds, i);
+//            }
+//        }
+//        TCanvas canvas = new TCanvas("RF", 1200, 1400);
+//        canvas.getCanvas().draw(dgn);
+//    }
 
     public class RF {
         private double offset;
@@ -211,11 +246,11 @@ public class RFtoCCDB {
         }
         
         public boolean isNew(double threshold) {
-            return Math.abs(this.delta)>threshold && this.isValid();
+            return Math.abs(this.delta)>threshold;
         }
         
         public boolean equals(RF o, double threshold) {
-            return Math.abs(this.offset-o.offset)<threshold || !this.isValid() || !o.isValid();
+            return Math.abs(this.offset-o.offset)<threshold;
         }
         
         @Override
@@ -255,12 +290,16 @@ public class RFtoCCDB {
             return rmin;
         }
         
+        public int getRmax() {
+            return rmax;
+        }
+        
         public int getStatus() {
             return status;
         }
         
-        public void setRF(int id, double offset, double error, double sigma, double delta) {
-            this.rf12[id-1] = new RF(offset, error, sigma, delta);
+        public void setRF(int id, double offset, double error, double delta, double sigma) {
+            this.rf12[id-1] = new RF(offset, error, delta, sigma);
         }
         
         public void setRmin(int run) {
@@ -317,8 +356,10 @@ public class RFtoCCDB {
         RFtoCCDB rf = new RFtoCCDB(files, threshold, maxsigma, update, skip);
                 
         try {
-            rf.readOffsets();
-            rf.plot();
+            Map<Integer,RFentry> rfs = rf.readOffsets();
+            rf.findRanges(rfs);
+            rf.printCCDBCommands(rfs);
+            rf.plotRanges(rfs);
         } catch (IOException ex) {
             Logger.getLogger(RFtoCCDB.class.getName()).log(Level.SEVERE, null, ex);
         }
