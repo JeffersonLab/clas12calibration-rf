@@ -33,7 +33,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     
     private final String           monitorName;
     private ArrayList<String>      calibrationTabNames  = new ArrayList();
-    private Map<Integer,DataGroup> calibrationData      = new LinkedHashMap<Integer,DataGroup>();
+    private Map<Integer,DataGroup> calibrationData      = new LinkedHashMap<>();
     private DataGroup              calibrationSummary   = null;
     private JPanel                 calibrationPanel     = null;
     private EmbeddedCanvasTabbed   calibrationCanvas    = null;
@@ -43,17 +43,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     private CanvasBook                    canvasBook    = new CanvasBook();
     private int                       numberOfEvents;
 
-    
-    public int bitsec = 0;
-    public long trigger = 0;
-    public long triggerPhase = 0;
-    public int trigFD = 0;
-    public int trigCD = 0;
-    
-    public boolean testTrigger = false;
-    public boolean TriggerBeam[] = new boolean[32];
-    public int TriggerMask = 0;
-    
+        
     private int runNumber   = 0;
     private int eventNumber = 0;
     private int viewRun     = 0;
@@ -125,7 +115,6 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     
     @Override
     public void dataEventAction(DataEvent event) {
-        if (!testTriggerMask()) return;
         this.setNumberOfEvents(this.getNumberOfEvents()+1);
         if (event.getType() == DataEventType.EVENT_START) {
 //            resetEventListener();
@@ -143,48 +132,9 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
 	}
     }
 
-    public void drawDetector() {
-    
-    }
-    
     public ConstantsManager getCcdb() {
         return ccdb;
     }
-
-    public void setTriggerPhase(long phase) {
-    	   this.triggerPhase = phase;
-    }
-    
-    public long getTriggerPhase() {
-    	    return this.triggerPhase;
-    }
-    
-    public void setTriggerWord(long trig) {
-    	   this.trigger = trig;
-    }
-    
-    public void setTestTrigger(boolean test) {
-    	   this.testTrigger = test;
-    }
-    
-    public int     getFDTrigger()            {return (int)(this.trigger)&0x000000000ffffffff;}
-    public int     getCDTrigger()            {return (int)(this.trigger>>32)&0x00000000ffffffff;}
-    public boolean isGoodFD()                {return  getFDTrigger()>0;}    
-    public boolean isTrigBitSet(int bit)     {int mask=0; mask |= 1<<bit; return isTrigMaskSet(mask);}
-    public boolean isTrigMaskSet(int mask)   {return (getFDTrigger()&mask)!=0;}
-    public boolean isGoodECALTrigger(int is) {return (testTrigger)? is==getECALTriggerSector():true;}    
-    public int           getElecTrigger()    {return getFDTrigger()&0x1;}
-    public int     getElecTriggerSector()    {return (int) (isGoodFD() ? Math.log10(getFDTrigger()>>1)/0.301+1:0);} 
-    public int     getECALTriggerSector()    {return (int) (isGoodFD() ? Math.log10(getFDTrigger()>>19)/0.301+1:0);}       
-    public int     getPCALTriggerSector()    {return (int) (isGoodFD() ? Math.log10(getFDTrigger()>>13)/0.301+1:0);}       
-    public int     getHTCCTriggerSector()    {return (int) (isGoodFD() ? Math.log10(getFDTrigger()>>7)/0.301+1:0);} 
-    
-    public int    getTriggerMask()        {return this.TriggerMask;}
-    public void   setTriggerMask(int bit) {this.TriggerMask|=(1<<bit);}  
-    public void clearTriggerMask(int bit) {this.TriggerMask&=~(1<<bit);}  
-    public boolean testTriggerMask()      {return this.TriggerMask!=0 ? isTrigMaskSet(this.TriggerMask):true;}
-    public boolean isGoodTrigger(int bit) {return TriggerBeam[bit] ? isTrigBitSet(bit):true;}
-
 
     public List<CalibrationConstants> getCalibrationConstants() {
 	return Arrays.asList(calibConstants);
@@ -396,9 +346,10 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     }
     
     public void saveTable(String name) {
-       try {
+        String filename = name + "." + this.getName() + ".txt";
+        try {
             // Open the output file
-            File outputFile = new File(name + "." + this.getName() + ".txt");
+            File outputFile = new File(filename);
             FileWriter outputFw = new FileWriter(outputFile.getAbsoluteFile());
             BufferedWriter outputBw = new BufferedWriter(outputFw);
 
@@ -414,7 +365,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
                 outputBw.newLine();
             }
             outputBw.close();
-            System.out.println("Constants saved to'" + name);
+            System.out.println("Constants saved to'" + filename);
         } catch (IOException ex) {
             System.out.println(
                     "Error writing file '"
@@ -453,7 +404,7 @@ public class CalibrationModule implements CalibrationConstantsListener, IDataEve
     
     public void showPlots() {
         this.setCanvasBookData();
-        if(this.canvasBook.getCanvasDataSets().size()!=0) {
+        if(!this.canvasBook.getCanvasDataSets().isEmpty()) {
             JFrame frame = new JFrame(this.getName());
             frame.setSize(1000, 800);        
             frame.add(canvasBook);
