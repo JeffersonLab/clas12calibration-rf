@@ -26,7 +26,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import org.clas.tools.Processor;
 
 import org.jlab.detector.decode.CLASDecoder;
 import org.jlab.groot.base.GStyle;
