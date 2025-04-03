@@ -6,7 +6,7 @@ JARFILE=`ls $DISTRO_DIR/target/clas12calibration-rf-*-jar-with-dependencies.jar`
 
 echo
 echo +-------------------------------------------------------------------------
-echo | RF CALIBRATION SUITE
+echo "| RF CALIBRATION SUITE"
 echo +-------------------------------------------------------------------------
 echo     
 

@@ -4,24 +4,16 @@ import org.clas.modules.RFsignals;
 import org.clas.modules.RFoffsets;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.imageio.ImageIO;
-
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -34,20 +26,20 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.clas.tools.Processor;
 
 import org.jlab.detector.decode.CLASDecoder;
-import org.jlab.detector.decode.CodaEventDecoder;
-import org.jlab.detector.decode.DetectorEventDecoder;
-import org.jlab.detector.view.DetectorPane2D;
 import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.TDirectory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.io.base.DataEventType;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
-import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.logging.DefaultLogger;
+import org.jlab.utils.options.OptionParser;
 
         
 /**
@@ -57,24 +49,24 @@ import org.jlab.io.hipo.HipoDataSource;
 
 public class CalibrationViewer implements IDataEventListener, ActionListener, ChangeListener {
     
-    List<DetectorPane2D> DetectorPanels   	= new ArrayList<DetectorPane2D>();
     JTabbedPane tabbedpane           		= null;
     JPanel mainPanel            	        = null;
     JMenuBar menuBar                            = null;
     DataSourceProcessorPane processorPane 	= null;
 
-    CodaEventDecoder               decoder = new CodaEventDecoder();
     CLASDecoder                clasDecoder = new CLASDecoder();
-    DetectorEventDecoder   detectorDecoder = new DetectorEventDecoder();
            
     private int canvasUpdateTime   = 2000;
-    private int analysisUpdateTime = 100;
+    private final int analysisNeventUpdate = 10000;
     private int moduleSelect       = 0;
     private int runNumber   = 0;
     private int eventNumber = 0;
-    String workDir         = null;
-    
-    public String outPath = ".";
+    private List<String> inputFiles = null;
+    private int currentFile = 0;
+    private boolean saveResults = true;
+    private boolean quitWhenDone = true;
+    private String workDir  = null;    
+    private String outPath = ".";
     
     // detector monitors
     CalibrationModule[] monitors = {
@@ -88,8 +80,12 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
     private int    rfid      = 1;
     private double targetPos = -3;      // cm
     
-    public CalibrationViewer() {    	
+    
+    public CalibrationViewer(String configuration, boolean save, boolean quit) {    	
         		
+        this.setAnalysisParameters(configuration);
+        this.saveResults = save;
+        this.quitWhenDone = quit;
         this.workDir = System.getProperty("user.dir");
         System.out.println("\nCurrent work directory set to:" + this.workDir);
 
@@ -99,11 +95,6 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         JMenu file = new JMenu("File");
         file.setMnemonic(KeyEvent.VK_A);
         file.getAccessibleContext().setAccessibleDescription("File options");
-        menuItem = new JMenuItem("Load files...");
-        menuItem.getAccessibleContext().setAccessibleDescription("Load files");
-        menuItem.addActionListener(this);
-        file.add(menuItem);        
-        file.addSeparator();
         menuItem = new JMenuItem("Open histograms file");
         menuItem.getAccessibleContext().setAccessibleDescription("Open histograms file");
         menuItem.addActionListener(this);
@@ -115,32 +106,9 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         menuItem = new JMenuItem("Print histograms as png");
         menuItem.getAccessibleContext().setAccessibleDescription("Print histograms as png");
         menuItem.addActionListener(this);
-        file.add(menuItem);
-//        menuItem = new JMenuItem("Upload all histos to the logbook");
-//        menuItem.getAccessibleContext().setAccessibleDescription("Upload all histos to the logbook");
-//        menuItem.addActionListener(this);
-//        file.add(menuItem);        
+        file.add(menuItem);      
         menuBar.add(file);
-//        
-//        JMenu settings = new JMenu("Settings");
-//        settings.setMnemonic(KeyEvent.VK_A);
-//        settings.getAccessibleContext().setAccessibleDescription("Choose monitoring parameters");
-//        menuItem = new JMenuItem("Set GUI update interval", KeyEvent.VK_T);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_T, ActionEvent.CTRL_MASK));
-//        menuItem.getAccessibleContext().setAccessibleDescription("Set GUI update interval");
-//        menuItem.addActionListener(this);
-//        settings.add(menuItem);
-//        menuItem = new JMenuItem("Set global z-axis log scale", KeyEvent.VK_L);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
-//        menuItem.getAccessibleContext().setAccessibleDescription("Set global z-axis log scale");
-//        menuItem.addActionListener(this);
-//        settings.add(menuItem);
-//        menuItem = new JMenuItem("Set global z-axis lin scale", KeyEvent.VK_R);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, ActionEvent.CTRL_MASK));
-//        menuItem.getAccessibleContext().setAccessibleDescription("Set global z-axis lin scale");
-//        menuItem.addActionListener(this);
-//        settings.add(menuItem);
-//        menuBar.add(settings);
+
          
         JMenu histo = new JMenu("Histograms");
         menuItem = new JMenuItem("Adjust fit...");
@@ -175,40 +143,6 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         menuItem.addActionListener(this);
         table.add(menuItem);
         menuBar.add(table);
-        
-        String TriggerDef[] = { "Electron",
-        		        "Electron S1","Electron S2","Electron S3","Electron S4","Electron S5","Electron S6",
-        		        "HTCC S1","HTCC S2","HTCC S3","HTCC S4","HTCC S5","HTCC S6",
-        		        "PCAL S1","PCAL S2","PCAL S3","PCAL S4","PCAL S5","PCAL S6",
-        		        "ECAL S1","ECAL S2","ECAL S3","ECAL S4","ECAL S5","ECAL S6",
-        		        "Unused","Unused","Unused","Unused","Unused","Unused",
-        		        "1K Pulser"};
-        		             
-        JMenu trigBitsBeam = new JMenu("TriggerBits");
-        trigBitsBeam.getAccessibleContext().setAccessibleDescription("Test Trigger Bits");
-        
-        for (int i=0; i<32; i++) {
-        	
-            JCheckBoxMenuItem bb = new JCheckBoxMenuItem(TriggerDef[i]);  
-            final Integer bit = new Integer(i);
-            bb.addItemListener(new ItemListener() {
-                public void itemStateChanged(ItemEvent e) {
-                	
-                    if(e.getStateChange() == ItemEvent.SELECTED) {
-                        for(int k=0; k<19; k++) {
-                      	monitors[k].setTriggerMask(bit);
-                        }
-                    } else {
-                        for(int k=0; k<19; k++) {
-                     	monitors[k].clearTriggerMask(bit);
-                        }
-                    };
-                }
-            });         
-            trigBitsBeam.add(bb); 
-        	        	
-        }
-//        menuBar.add(trigBitsBeam);        
 
         // create main panel
         mainPanel = new JPanel();	
@@ -217,7 +151,8 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
       	tabbedpane 	= new JTabbedPane();
 
         processorPane = new DataSourceProcessorPane();
-        processorPane.setUpdateRate(analysisUpdateTime);
+        processorPane.setUpdateRate(analysisNeventUpdate);
+//        processorPane.setDelay(1000);
 
         mainPanel.add(tabbedpane);
         mainPanel.add(processorPane,BorderLayout.PAGE_END);
@@ -240,15 +175,13 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         
     }
       
+    @Override
     public void actionPerformed(ActionEvent e) {
         System.out.println(e.getActionCommand());
         if(e.getActionCommand() == "Adjust fit...") {
             //System.out.println("Adjusting fits for module " + this.modules.get(moduleParSelect).getName());
             this.monitors[moduleSelect].adjustFit();
-        }        
-        if(e.getActionCommand() == "Load files...") {
-            this.readFiles();
-        }        
+        }       
 //        if(e.getActionCommand()=="Set GUI update interval") {
 //            this.chooseUpdateInterval();
 //        }
@@ -271,8 +204,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             this.createHistoPDF();
         }
         if(e.getActionCommand()=="Save histograms to file") {
-            DateFormat df = new SimpleDateFormat("MM-dd-yyyy_hh.mm.ss_aa");
-            String fileName = "rfCalib_" + df.format(new Date()) + ".hipo";
+            String fileName = this.getFilenameFromDate() + ".hipo";
             JFileChooser fc = new JFileChooser();
             File workingDirectory = new File(System.getProperty("user.dir"));   
             fc.setCurrentDirectory(workingDirectory);
@@ -285,41 +217,9 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             this.saveHistosToFile(fileName);
         }
         
-//        if(e.getActionCommand()=="Upload all histos to the logbook") {   
-//            
-//            DateFormat df = new SimpleDateFormat("MM-dd-yyyy_hh.mm.ss_aa");
-//            String data = outPath + "/output" + "/rfCalib_" + this.runNumber + "_" + df.format(new Date());        
-//            File theDir = new File(data);
-//            // if the directory does not exist, create it
-//            if (!theDir.exists()) {
-//                boolean result = false;
-//                try{theDir.mkdir();result = true;} 
-//                catch(SecurityException se){}        
-//                if(result){ System.out.println("Created directory: " + data);}
-//            }
-//            
-//            for(int k=0; k<this.monitors.length; k++) {
-//                this.monitors[k].printCanvas(data);
-//            }
-//            
-//            LogEntry entry = new LogEntry("All online monitoring histograms for run number " + this.runNumber, "HBLOG");
-//            
-//            System.out.println("Starting to upload all monitoring plots");
-//            
-//            try{
-//              entry.addAttachment(data+"/RF_canvas0.png", "RF canvas 1");
-//              entry.addAttachment(data+"/RF_canvas1.png", "RF canvas 2");
-//              System.out.println("RF plots uploaded");
-//
-//              long lognumber = entry.submitNow();
-//              System.out.println("Successfully submitted log entry number: " + lognumber); 
-//            } catch(Exception exc){}
-//              
-//        }         
         // Table menu bar
         if(e.getActionCommand()=="Save table...") {
-            DateFormat df = new SimpleDateFormat("MM-dd-yyyy_hh.mm.ss_aa");
-            String fileName = "rfCalib" + "_" + df.format(new Date());
+            String fileName = this.getFilenameFromDate();
             JFileChooser fc = new JFileChooser();
             File workingDirectory = new File(this.workDir);
             fc.setCurrentDirectory(workingDirectory);
@@ -345,9 +245,6 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         }                     
         if(e.getActionCommand()=="Set RF parameters...") {
             this.setAnalysisParameters();
-            for(int k=0; k<this.monitors.length; k++) {
-                this.monitors[k].setAnalysisParameters(this.rfbucket,this.ncycles,this.tdc2time,this.rfid,this.targetPos);
-            }
         }
          if(e.getActionCommand() == "View all") {
             this.monitors[moduleSelect].showPlots();
@@ -378,50 +275,8 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             }
         }
     }
+    
         
-    private JLabel getImage(String path,double scale) {
-        JLabel label = null;
-        Image image = null;
-        try {
-            URL url = new URL(path);
-            image = ImageIO.read(url);
-        } catch (IOException e) {
-        	e.printStackTrace();
-                System.out.println("Picture upload from " + path + " failed");
-        }
-        ImageIcon imageIcon = new ImageIcon(image);
-        double width  = imageIcon.getIconWidth()*scale;
-        double height = imageIcon.getIconHeight()*scale;
-        imageIcon = new ImageIcon(image.getScaledInstance((int) width,(int) height, Image.SCALE_SMOOTH));
-        label = new JLabel(imageIcon);
-        return label;
-    }
-    
-    public JPanel  getPanel(){
-        return mainPanel;
-    }
-    
-    public long getTriggerWord(DataEvent event) {    	
- 	    DataBank bank = event.getBank("RUN::config");	        
-        return bank.getLong("trigger", 0);
-    }
-    
-    public long getTriggerPhase(DataEvent event) {    	
- 	    DataBank bank = event.getBank("RUN::config");	        
-        long timestamp = bank.getLong("timestamp",0);    
-        int phase_offset = 1;
-        return ((timestamp%6)+phase_offset)%6; // TI derived phase correction due to TDC and FADC clock differences 
-    }
-    
-    private int getRunNumber(DataEvent event) {
-        int rNum = this.runNumber;
-        DataBank bank = event.getBank("RUN::config");
-        if(bank!=null) {
-            rNum      = bank.getInt("run", 0);
-        }
-        return rNum;
-    }
-    
     @Override
     public void dataEventAction(DataEvent event) {
     	
@@ -434,9 +289,8 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             //event.show();
 
             if(event instanceof EvioDataEvent){
-             	hipo = (HipoDataEvent) clasDecoder.getDataEvent(event);
-                DataBank   header = clasDecoder.createHeaderBank(hipo, 0, 0, (float) 0, (float) 0);
-                hipo.appendBanks(header);
+                System.out.println("Unsupported data format, exiting");
+             	System.exit(1);
             } 
             else {
                 hipo = (HipoDataEvent) event;    
@@ -450,6 +304,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
                  eNum      = bank.getInt("event", 0);
             }
             if(rNum!=0 && this.runNumber != rNum) {
+                Logger.getLogger("org.freehep.math.minuit").setLevel(Level.WARNING);
                 this.runNumber = rNum;
                 for(int k=0; k<this.monitors.length; k++) {
                     this.monitors[k].setRunNumber(this.runNumber);
@@ -469,6 +324,11 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
 //                this.monitors[k].setTriggerWord(getTriggerWord(hipo));        	    
                 this.monitors[k].dataEventAction(hipo);
             }      
+            
+            if(event.getType() == DataEventType.EVENT_STOP) {
+                System.out.println();
+                this.processNextFile();
+            }
 	}
     }
 
@@ -480,7 +340,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         System.out.println(dir.getDirectoryList());
         dir.cd();
         dir.pwd();
-        
+        Logger.getLogger("org.freehep.math.minuit").setLevel(Level.WARNING);        
         for(int k=0; k<this.monitors.length; k++) {
             this.monitors[k].readDataGroup(dir);
         }
@@ -488,8 +348,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
 
     
     public void printHistosToFile() {
-        DateFormat df = new SimpleDateFormat("MM-dd-yyyy_hh.mm.ss_aa");
-        String data = outPath + "/rfCalib_" + df.format(new Date());        
+        String data = this.getFilenameFromDate();        
         File theDir = new File(data);
         // if the directory does not exist, create it
         if (!theDir.exists()) {
@@ -513,6 +372,11 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         System.out.println("Histogram pngs succesfully saved in: " + data);
     }
     
+    private String getFilenameFromDate() {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd_hh.mm.ss_aa");
+        String fileName = outPath + "/rfCalib_" + df.format(new Date());        
+        return fileName;
+    }
     
     public void createHistoPDF() {
         /*
@@ -543,52 +407,25 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         }
         */
     }
-        
-  
     
-    private void readFiles() {
-        JFileChooser fc = new JFileChooser();
-        fc.setDialogTitle("Choose input files directory...");
-        fc.setMultiSelectionEnabled(true);
-        fc.setAcceptAllFileFilterUsed(false);
-        File workingDirectory = new File(this.workDir);
-        fc.setCurrentDirectory(workingDirectory);
-        int returnValue = fc.showOpenDialog(null);
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            int nf = 0;
-            for (File fd : fc.getSelectedFiles()) {
-                if (fd.isFile()) {
-                    Integer current = 0;
-                    Integer nevents = 0;
-                    DataEvent event = null;
-                    HipoDataSource hipoReader = new HipoDataSource();
-                    hipoReader.open(fd);
-                    current = hipoReader.getCurrentIndex();
-                    nevents = hipoReader.getSize();
-                    System.out.println("\nFILE: " + nf + " " + fd.getName() + " N.EVENTS: " + nevents.toString() + "  CURRENT : " + current.toString());
-                    for (int k = 0; k < nevents; k++) {
-                        if (hipoReader.hasEvent() == true) {
-                            event = hipoReader.getNextEvent();
-                        }
-                        if (event != null) {
-                            this.dataEventAction(event);
-                            if (k % 10000 == 0) {
-                                System.out.println("Read " + k + " events");
-                            }
-                        }
-                    }
-                    hipoReader.close();
-                    for (int k = 0; k < this.monitors.length; k++) {
-                        this.monitors[k].analyze();
-                        this.monitors[k].fillSummary(this.runNumber);
-                        this.monitors[k].plotHistos(this.runNumber);
-//                            this.monitors[k]..getDetectorCanvas().u
-                    }
-                    nf++;
-                }
+    private void processNextFile() {
+        if(currentFile<inputFiles.size()-1) {
+            this.currentFile++;
+            this.processorPane.openAndRun(inputFiles.get(this.currentFile));
+        }
+        else if(saveResults) {
+            this.saveHistosAndTables();
+            if(quitWhenDone) {
+                System.exit(0);
             }
-//            this.updateTable();
-            System.out.println("Task completed");
+        }
+    }
+
+    public void processFiles(List<String> filenames) {
+        this.inputFiles = filenames;
+        if(this.inputFiles!=null && !inputFiles.isEmpty()) {
+            this.currentFile = 0;
+            this.processorPane.openAndRun(inputFiles.get(0));
         }
     }
 
@@ -600,7 +437,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         }      
     }
     
-    public void saveHistosToFile(String fileName) {
+    private void saveHistosToFile(String fileName) {
         // TXT table summary FILE //
         TDirectory dir = new TDirectory();
         for(int k=0; k<this.monitors.length; k++) {
@@ -610,8 +447,41 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         dir.writeFile(fileName);
     }
         
-    public void setAnalysisParameters() {
+    private void saveTablesToFile(String fileName) {
+        // TXT table summary FILE //
+        for(int k=0; k<this.monitors.length; k++) {
+            this.monitors[k].saveTable(fileName);
+        }
+    }
+    
+    public void saveHistosAndTables() {
+        String fileName = this.getFilenameFromDate();
+        this.saveHistosToFile(fileName+".hipo");
+        this.saveTablesToFile(fileName);
+    }
+        
+    public final void setAnalysisParameters(String configuration) {
 
+        if(configuration!=null && !configuration.isEmpty()) {
+            String[] pars = configuration.split(":");
+            if(pars.length!=5) {
+                System.out.println("\nWARNING: Invalid configuration string, keeping defaults");
+            }
+            else {
+                this.rfbucket  = Double.parseDouble(pars[0].trim());
+                this.ncycles   = Integer.parseInt(pars[1].trim());
+                this.tdc2time  = Double.parseDouble(pars[2].trim());
+                this.rfid      = Integer.parseInt(pars[3].trim());
+                this.targetPos = Double.parseDouble(pars[4].trim());
+                for (CalibrationModule monitor : this.monitors) {
+                    monitor.setAnalysisParameters(this.rfbucket, this.ncycles, this.tdc2time, this.rfid, this.targetPos);
+                }
+                this.printAnalysisParameters();
+            }
+        }      
+    }
+
+    public void setAnalysisParameters() {
         JTextField rfFrequency = new JTextField(5);
 	JTextField rfCycles    = new JTextField(5);
 	JTextField tdc2Time    = new JTextField(5);
@@ -655,16 +525,24 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
             if (!targetPOS.getText().isEmpty()) {
                 this.targetPos = Double.parseDouble(targetPOS.getText());
             } 
-            System.out.println("RF analysis paramters");
-            System.out.println("\n\tRF period: " + this.rfbucket);
-            System.out.println("\n\tRF cycles: " + this.ncycles);
-            System.out.println("\n\tTDC-to-time conversion factor: " + this.tdc2time);
-            System.out.println("\n\tRF primary signal ID: " + this.rfid);
-            System.out.println("\n\tTarget z position: " + this.targetPos);
         }
+        for (CalibrationModule monitor : this.monitors) {
+            monitor.setAnalysisParameters(this.rfbucket, this.ncycles, this.tdc2time, this.rfid, this.targetPos);
+        }
+        this.printAnalysisParameters();
+
     }
     
-    public void setCanvasUpdate(int time) {
+    private void printAnalysisParameters() {
+        System.out.println("RF analysis paramters");
+        System.out.println("\tRF period: " + this.rfbucket);
+        System.out.println("\tRF cycles: " + this.ncycles);
+        System.out.println("\tTDC-to-time conversion factor: " + this.tdc2time);
+        System.out.println("\tRF primary signal ID: " + this.rfid);
+        System.out.println("\tTarget z position: " + this.targetPos);
+    }
+    
+    public final void setCanvasUpdate(int time) {
         System.out.println("Setting " + time + " ms update interval");
         this.canvasUpdateTime = time;
         for(int k=0; k<this.monitors.length; k++) {
@@ -672,6 +550,7 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
         }
     }
 
+    @Override
     public void stateChanged(ChangeEvent e) {
         JTabbedPane sourceTabbedPane = (JTabbedPane) e.getSource();
         int index = sourceTabbedPane.getSelectedIndex();
@@ -684,20 +563,52 @@ public class CalibrationViewer implements IDataEventListener, ActionListener, Ch
     @Override
     public void timerUpdate() {
 //        System.out.println("Time to update ...");
+        Logger.getLogger("org.freehep.math.minuit").setLevel(Level.WARNING);
         for(int k=0; k<this.monitors.length; k++) {
-            this.monitors[k].timerUpdate();
+            if(this.monitors[k].getNumberOfEvents()>0) this.monitors[k].timerUpdate();
         }
-   }
+//        System.out.print("\r" + this.processorPane.getStatus().getText()); // should be updated in common tools
+    }
 
     public static void main(String[] args){
-        JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        CalibrationViewer viewer = new CalibrationViewer();
-        //frame.add(viewer.getPanel());
-        frame.add(viewer.mainPanel);
-        frame.setJMenuBar(viewer.menuBar);
-        frame.setSize(1500, 1000);
-        frame.setVisible(true);
-    }
+        
+        OptionParser parser = new OptionParser("rfCalib");
        
+        parser.addOption("-c", "4.008:32:0.02346:1:-3.0" , "RF configuration as a colon-separated list of strings:\n" +
+                                                           "\t\t  (RF period (ns)\n" + 
+                                                           "\t\t  Number of cycles or downsampling\n" + 
+                                                           "\t\t  TDC-to-time conversion factor (1/ns)\n" + 
+                                                           "\t\t  Primary RF signal id\n" + 
+                                                           "\t\t  Target position (cm)\n");
+        parser.addOption("-s", "1", "save constants and histograms (0=false; 1=true)");
+        parser.addOption("-w", "1", "open GUI window (0=false; 1=true)");
+        
+        parser.parse(args);
+        
+        List<String> inputFiles = parser.getInputList();
+        
+        String configuration   = parser.getOption("-c").stringValue();
+        boolean saveConstants  = parser.getOption("-s").intValue()!=0;
+        boolean openWindow     = parser.getOption("-w").intValue()==1;
+        
+        if(!openWindow) System.setProperty("java.awt.headless", "true");
+
+        CalibrationViewer viewer = new CalibrationViewer(configuration, saveConstants, !openWindow);
+        viewer.processorPane.setVerbose(true);
+        
+        DefaultLogger.debug();
+
+        if(openWindow) {
+            JFrame frame = new JFrame("Calibration");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.add(viewer.mainPanel);
+            frame.setJMenuBar(viewer.menuBar);
+            frame.setSize(1500, 1000);
+            frame.setVisible(true);
+        }
+        if(!inputFiles.isEmpty()) {
+            System.out.println("\nProcessing file list provided from command line");
+            viewer.processFiles(inputFiles);
+        }
+    }
 }

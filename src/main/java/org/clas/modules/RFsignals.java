@@ -36,8 +36,8 @@ public class RFsignals extends CalibrationModule {
         int run = this.getViewRun();
         if(run==0) run = this.getRunNumber();
         System.out.println("Adjusting fit for run " + run);
-        H1F hrf = this.getDataGroup().get(run).getH1F("rfdiffAve_" + run);
-        F1D fun  = this.getDataGroup().get(run).getF1D("fdiffAve_" + run);
+        H1F hrf = this.getDataGroup().get(run).getH1F("rfdiffAve-" + run);
+        F1D fun  = this.getDataGroup().get(run).getF1D("fdiffAve-" + run);
         AdjustFit cfit = new AdjustFit(hrf, fun, "LRQ");
         this.getCalibrationCanvas().getCanvas("RF Time").update();
         this.updateTable(run);
@@ -57,144 +57,144 @@ public class RFsignals extends CalibrationModule {
 //        DataGroup sum = new DataGroup(1,1);
 //        sum.addDataSet(summary, 0);
 //        this.setDetectorSummary(sum);
-        H1F rf1 = new H1F("rf1_"+run,"rf1_"+run, 100,0.,120000);
+        H1F rf1 = new H1F("rf1-"+run,"rf1-"+run, 100,0.,120000);
         rf1.setTitleX("RF1 tdc");
         rf1.setTitleY("Counts");
         rf1.setFillColor(3);
-        H1F rf2 = new H1F("rf2_"+run,"rf2_"+run, 100,0.,120000);
+        H1F rf2 = new H1F("rf2-"+run,"rf2-"+run, 100,0.,120000);
         rf2.setTitleX("RF2 tdc");
         rf2.setTitleY("Counts");
         rf2.setFillColor(4);
-        H1F rfdiff = new H1F("rfdiff_"+run,"rfdiff_"+run, 240, 0., (int) this.rfbucket);
+        H1F rfdiff = new H1F("rfdiff-"+run,"rfdiff-"+run, 240, 0., (int) this.rfbucket);
         rfdiff.setTitleX("RF diff");
         rfdiff.setTitleY("Counts");
-        F1D fdiff = new F1D("fdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
+        F1D fdiff = new F1D("fdiff-"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
         fdiff.setParameter(0, 0);
         fdiff.setParameter(1, 0);
         fdiff.setParameter(2, 1.0);
         fdiff.setLineWidth(2);
         fdiff.setLineColor(2);
         fdiff.setOptStat("1111");
-        H1F rfdiffAve = new H1F("rfdiffAve_" + run,"rfdiffAve_"+run, 480, 0., this.rfbucket);
+        H1F rfdiffAve = new H1F("rfdiffAve-" + run,"rfdiffAve-"+run, 480, 0., this.rfbucket);
         rfdiffAve.setTitleX("RF diff");
         rfdiffAve.setTitleY("Counts");
-        F1D fdiffAve = new F1D("fdiffAve_"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
+        F1D fdiffAve = new F1D("fdiffAve-"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
         fdiffAve.setParameter(0, 0);
         fdiffAve.setParameter(1, 0);
         fdiffAve.setParameter(2, 1.0);
         fdiffAve.setLineWidth(2);
         fdiffAve.setLineColor(2);
         fdiffAve.setOptStat("1111");
-        H1F rf1rawdiff = new H1F("rf1rawdiff_"+run,"rf1rawdiff_"+run, 100, tdcMin, tdcMax);
+        H1F rf1rawdiff = new H1F("rf1rawdiff-"+run,"rf1rawdiff-"+run, 100, tdcMin, tdcMax);
         rf1rawdiff.setTitleX("RF1 diff");
         rf1rawdiff.setTitleY("Counts");
-        F1D f1rawdiff = new F1D("f1rawdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
+        F1D f1rawdiff = new F1D("f1rawdiff-"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
         f1rawdiff.setParameter(0, 0);
         f1rawdiff.setParameter(1, 0);
         f1rawdiff.setParameter(2, 1.0);
         f1rawdiff.setLineWidth(2);
         f1rawdiff.setLineColor(2);
         f1rawdiff.setOptStat("1111");
-        H1F rf2rawdiff = new H1F("rf2rawdiff_"+run,"rf2rawdiff_"+run, 100, tdcMin, tdcMax);
+        H1F rf2rawdiff = new H1F("rf2rawdiff-"+run,"rf2rawdiff-"+run, 100, tdcMin, tdcMax);
         rf2rawdiff.setTitleX("RF2 diff");
         rf2rawdiff.setTitleY("Counts");
-        F1D f2rawdiff = new F1D("f2rawdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
+        F1D f2rawdiff = new F1D("f2rawdiff-"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
         f2rawdiff.setParameter(0, 0);
         f2rawdiff.setParameter(1, 0);
         f2rawdiff.setParameter(2, 1.0);
         f2rawdiff.setLineWidth(2);
         f2rawdiff.setLineColor(2);
         f2rawdiff.setOptStat("1111");
-        H2F rf1rawdiffrf1 = new H2F("rf1rawdiffrf1_"+run,"rf1rawdiffrf1_"+run, 100,0.,120000, 25, tdcMin, tdcMax);
+        H2F rf1rawdiffrf1 = new H2F("rf1rawdiffrf1-"+run,"rf1rawdiffrf1-"+run, 100,0.,120000, 25, tdcMin, tdcMax);
         rf1rawdiffrf1.setTitleX("RF1 tdc");
         rf1rawdiffrf1.setTitleY("RF1 diff");
-        H2F rf2rawdiffrf2 = new H2F("rf2rawdiffrf2_"+run,"rf2rawdiffrf2_"+run, 100,0.,120000, 25, tdcMin, tdcMax);
+        H2F rf2rawdiffrf2 = new H2F("rf2rawdiffrf2-"+run,"rf2rawdiffrf2-"+run, 100,0.,120000, 25, tdcMin, tdcMax);
         rf2rawdiffrf2.setTitleX("RF2 tdc");
         rf2rawdiffrf2.setTitleY("RF2 diff");
-        H1F rf1diff = new H1F("rf1diff_"+run,"rf1diff_"+run, 160, this.period-2, this.period+2);
+        H1F rf1diff = new H1F("rf1diff-"+run,"rf1diff-"+run, 160, this.period-2, this.period+2);
         rf1diff.setTitleX("RF1 diff (ns)");
         rf1diff.setTitleY("Counts");
-        F1D f1diff = new F1D("f1diff_"+run,"[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
+        F1D f1diff = new F1D("f1diff-"+run,"[amp]*gaus(x,[mean],[sigma])", -5.0, 5.0);
         f1diff.setParameter(0, 0);
         f1diff.setParameter(1, 0);
         f1diff.setParameter(2, 1.0);
         f1diff.setLineWidth(2);
         f1diff.setLineColor(2);
         f1diff.setOptStat("1111");
-        H1F rf2diff = new H1F("rf2diff_"+run,"rf2diff_"+run, 160, this.period-2, this.period+2);
+        H1F rf2diff = new H1F("rf2diff-"+run,"rf2diff-"+run, 160, this.period-2, this.period+2);
         rf2diff.setTitleX("RF2 diff (ns)");
         rf2diff.setTitleY("Counts");
-        F1D f2diff = new F1D("f2diff_"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
+        F1D f2diff = new F1D("f2diff-"+run,"[amp]*gaus(x,[mean],[sigma])", tdcMin, tdcMax);
         f2diff.setParameter(0, 0);
         f2diff.setParameter(1, 0);
         f2diff.setParameter(2, 1.0);
         f2diff.setLineWidth(2);
         f2diff.setLineColor(2);
         f2diff.setOptStat("1111");
-        H2F timeRF1 = new H2F("timeRF1_"+run,"timeRF1_"+run,100,0.,this.period, 200, 0., this.rfbucket);
+        H2F timeRF1 = new H2F("timeRF1-"+run,"timeRF1-"+run,100,0.,this.period, 200, 0., this.rfbucket);
         timeRF1.setTitleX("RF1 (ns)");
         timeRF1.setTitleY("RF diff (ns)");
-        H2F timeRF2 = new H2F("timeRF2_"+run,"timeRF2_"+run,100,0.,this.period, 200, 0., this.rfbucket);
+        H2F timeRF2 = new H2F("timeRF2-"+run,"timeRF2-"+run,100,0.,this.period, 200, 0., this.rfbucket);
         timeRF2.setTitleX("RF2 (ns)");
         timeRF2.setTitleY("RF diff (ns)");
-        GraphErrors  rf1Timeline = new GraphErrors("rf1Timeline_"+run);
+        GraphErrors  rf1Timeline = new GraphErrors("rf1Timeline-"+run);
         rf1Timeline.setTitle("RF1 Timeline"); //  title
         rf1Timeline.setTitleX("Event Number"); // X axis title
         rf1Timeline.setTitleY("RF1");   // Y axis title
         rf1Timeline.setMarkerColor(44); // color from 0-9 for given palette
         rf1Timeline.setMarkerSize(5);  // size in points on the screen
-        GraphErrors  rf2Timeline = new GraphErrors("rf2Timeline_"+run);
+        GraphErrors  rf2Timeline = new GraphErrors("rf2Timeline-"+run);
         rf2Timeline.setTitle("RF2 Timeline"); //  title
         rf2Timeline.setTitleX("Event Number"); // X axis title
         rf2Timeline.setTitleY("RF2");   // Y axis title
         rf2Timeline.setMarkerColor(44); // color from 0-9 for given palette
         rf2Timeline.setMarkerSize(5);  // size in points on the screen
-        GraphErrors  rfTimeline = new GraphErrors("rfTimeline_"+run);
+        GraphErrors  rfTimeline = new GraphErrors("rfTimeline-"+run);
         rfTimeline.setTitle("RF Timeline"); //  title
         rfTimeline.setTitleX("Event Number"); // X axis title
         rfTimeline.setTitleY("RF");   // Y axis title
         rfTimeline.setMarkerColor(44); // color from 0-9 for given palette
         rfTimeline.setMarkerSize(5);  // size in points on the screen
-        GraphErrors  rfAveTimeline = new GraphErrors("rfAveTimeline_"+run);
+        GraphErrors  rfAveTimeline = new GraphErrors("rfAveTimeline-"+run);
         rfAveTimeline.setTitle("<RF> Timeline"); //  title
         rfAveTimeline.setTitleX("Event Number"); // X axis title
         rfAveTimeline.setTitleY("<RF>");   // Y axis title
         rfAveTimeline.setMarkerColor(44); // color from 0-9 for given palette
         rfAveTimeline.setMarkerSize(5);  // size in points on the screen
-        H1F rf1difftmp = new H1F("rf1difftmp_"+run,"rf1difftmp_"+run, 160, this.period-2, this.period+2);
-        H1F rf2difftmp = new H1F("rf2difftmp_"+run,"rf2difftmp_"+run, 160, this.period-2, this.period+2);
-        H1F rfdifftmp = new H1F("rfdifftmp_"+run,"rfdifftmp_"+run, 200, 0., this.rfbucket);
-        H1F rfdiffAvetmp = new H1F("rfdiffAvetmp_"+run,"rfdiffAvetmp_"+run, 480, 0., this.rfbucket);
-        H1F rf1fADC = new H1F("rf1fADC_"+run,"rf1fADC_"+run, 100,0.,400);
+        H1F rf1difftmp = new H1F("rf1difftmp-"+run,"rf1difftmp-"+run, 160, this.period-2, this.period+2);
+        H1F rf2difftmp = new H1F("rf2difftmp-"+run,"rf2difftmp-"+run, 160, this.period-2, this.period+2);
+        H1F rfdifftmp = new H1F("rfdifftmp-"+run,"rfdifftmp-"+run, 200, 0., this.rfbucket);
+        H1F rfdiffAvetmp = new H1F("rfdiffAvetmp-"+run,"rfdiffAvetmp-"+run, 480, 0., this.rfbucket);
+        H1F rf1fADC = new H1F("rf1fADC-"+run,"rf1fADC-"+run, 100,0.,400);
         rf1fADC.setTitleX("RF1 tdc");
         rf1fADC.setTitleY("Counts");
         rf1fADC.setFillColor(33);
-        H1F rf2fADC = new H1F("rf2fADC_"+run,"rf2fADC_"+run, 100,0.,400);
+        H1F rf2fADC = new H1F("rf2fADC-"+run,"rf2fADC-"+run, 100,0.,400);
         rf2fADC.setTitleX("RF2 tdc");
         rf2fADC.setTitleY("Counts");
         rf2fADC.setFillColor(36);
-        H1F rf1fADCadc = new H1F("rf1fADCadc_"+run,"rf1fADCadc_"+run, 100,0.,60000);
+        H1F rf1fADCadc = new H1F("rf1fADCadc-"+run,"rf1fADCadc-"+run, 100,0.,60000);
         rf1fADCadc.setTitleX("RF1 adc");
         rf1fADCadc.setTitleY("Counts");
         rf1fADCadc.setFillColor(33);
-        H1F rf2fADCadc = new H1F("rf2fADCadc_"+run,"rf2fADCadc_"+run, 100,0.,60000);
+        H1F rf2fADCadc = new H1F("rf2fADCadc-"+run,"rf2fADCadc-"+run, 100,0.,60000);
         rf2fADCadc.setTitleX("RF2 adc");
         rf2fADCadc.setTitleY("Counts");
         rf2fADCadc.setFillColor(36);
-        H1F rffADCdiff = new H1F("rffADCdiff_"+run,"rffADCdiff_"+run, 400, 0., this.rfbucket);
+        H1F rffADCdiff = new H1F("rffADCdiff-"+run,"rffADCdiff-"+run, 400, 0., this.rfbucket);
         rffADCdiff.setTitleX("RF diff");
         rffADCdiff.setTitleY("Counts");
-        H1F rffADCdifftmp = new H1F("rffADCdifftmp_"+run,"rffADCdifftmp_"+run, 400, 0., this.rfbucket);
+        H1F rffADCdifftmp = new H1F("rffADCdifftmp-"+run,"rffADCdifftmp-"+run, 400, 0., this.rfbucket);
         rffADCdifftmp.setTitleX("RF diff");
         rffADCdifftmp.setTitleY("Counts");
-        F1D ffADCdiff = new F1D("ffADCdiff_"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
+        F1D ffADCdiff = new F1D("ffADCdiff-"+run,"[amp]*gaus(x,[mean],[sigma])", 0., this.rfbucket);
         ffADCdiff.setParameter(0, 0);
         ffADCdiff.setParameter(1, 0);
         ffADCdiff.setParameter(2, 1.0);
         ffADCdiff.setLineWidth(2);
         ffADCdiff.setLineColor(2);
         ffADCdiff.setOptStat("1111");
-        GraphErrors  rffADCTimeline = new GraphErrors("rffADCTimeline_"+run);
+        GraphErrors  rffADCTimeline = new GraphErrors("rffADCTimeline-"+run);
         rffADCTimeline.setTitle("RF fADC Timeline"); //  title
         rffADCTimeline.setTitleX("Event Number"); // X axis title
         rffADCTimeline.setTitleY("RF");   // Y axis title
@@ -247,73 +247,73 @@ public class RFsignals extends CalibrationModule {
         this.getCalibrationCanvas().getCanvas("RF TDCs").setGridX(false);
         this.getCalibrationCanvas().getCanvas("RF TDCs").setGridY(false);
         this.getCalibrationCanvas().getCanvas("RF TDCs").cd(0);
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf1_"+run));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf1-"+run));
         this.getCalibrationCanvas().getCanvas("RF TDCs").cd(1);
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf1rawdiff_"+run));
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getF1D("f1rawdiff_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf1rawdiff-"+run));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getF1D("f1rawdiff-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF TDCs").cd(2);
         this.getCalibrationCanvas().getCanvas("RF TDCs").getPad(2).getAxisZ().setLog(true);
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH2F("rf1rawdiffrf1_"+run));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH2F("rf1rawdiffrf1-"+run));
         this.getCalibrationCanvas().getCanvas("RF TDCs").cd(3);
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf2_"+run));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf2-"+run));
         this.getCalibrationCanvas().getCanvas("RF TDCs").cd(4);
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf2rawdiff_"+run));
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getF1D("f2rawdiff_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH1F("rf2rawdiff-"+run));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getF1D("f2rawdiff-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF TDCs").cd(5);
         this.getCalibrationCanvas().getCanvas("RF TDCs").getPad(5).getAxisZ().setLog(true);
-        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH2F("rf2rawdiffrf2_"+run));
+        this.getCalibrationCanvas().getCanvas("RF TDCs").draw(this.getDataGroup().get(run).getH2F("rf2rawdiffrf2-"+run));
         this.getCalibrationCanvas().getCanvas("RF TDCs").update();
         this.getCalibrationCanvas().getCanvas("RF Time").divide(3, 2);
         this.getCalibrationCanvas().getCanvas("RF Time").setGridX(false);
         this.getCalibrationCanvas().getCanvas("RF Time").setGridY(false);
         this.getCalibrationCanvas().getCanvas("RF Time").cd(0);
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rfdiff_"+run));
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("fdiff_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rfdiff-"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("fdiff-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF Time").cd(1);
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rf1diff_"+run));
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("f1diff_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rf1diff-"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("f1diff-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF Time").cd(2);
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rf2diff_"+run));
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("f2diff_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rf2diff-"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("f2diff-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF Time").cd(3);
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rfdiffAve_"+run));
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("fdiffAve_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH1F("rfdiffAve-"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getF1D("fdiffAve-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF Time").cd(4);
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH2F("timeRF1_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH2F("timeRF1-"+run));
         this.getCalibrationCanvas().getCanvas("RF Time").cd(5);
-        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH2F("timeRF2_"+run));
+        this.getCalibrationCanvas().getCanvas("RF Time").draw(this.getDataGroup().get(run).getH2F("timeRF2-"+run));
         this.getCalibrationCanvas().getCanvas("RF Time").update();
         this.getCalibrationCanvas().getCanvas("RF Timeline").divide(2, 2);
         this.getCalibrationCanvas().getCanvas("RF Timeline").setGridX(false);
         this.getCalibrationCanvas().getCanvas("RF Timeline").setGridY(false);
-        if(this.getDataGroup().get(run).getGraph("rf1Timeline_"+run).getVectorX().size()>=2) {
+        if(this.getDataGroup().get(run).getGraph("rf1Timeline-"+run).getVectorX().size()>=2) {
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(0);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf1Timeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf1Timeline-"+run));
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(1);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf2Timeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf2Timeline-"+run));
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(2);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfTimeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfTimeline-"+run));
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(3);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfAveTimeline_"+run));               
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfAveTimeline-"+run));               
         }
         this.getCalibrationCanvas().getCanvas("RF Timeline").update();
         this.getCalibrationCanvas().getCanvas("RF fADC").divide(3, 2);
         this.getCalibrationCanvas().getCanvas("RF fADC").setGridX(false);
         this.getCalibrationCanvas().getCanvas("RF fADC").setGridY(false);
         this.getCalibrationCanvas().getCanvas("RF fADC").cd(0);
-        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf1fADC_"+run));
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf1fADC-"+run));
         this.getCalibrationCanvas().getCanvas("RF fADC").cd(1);
-        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf1fADCadc_"+run));
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf1fADCadc-"+run));
         this.getCalibrationCanvas().getCanvas("RF fADC").cd(2);
-        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rffADCdiff_"+run));
-        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getF1D("ffADCdiff_"+run),"same");
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rffADCdiff-"+run));
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getF1D("ffADCdiff-"+run),"same");
         this.getCalibrationCanvas().getCanvas("RF fADC").cd(3);
-        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf2fADC_"+run));
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf2fADC-"+run));
         this.getCalibrationCanvas().getCanvas("RF fADC").cd(4);
-        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf2fADCadc_"+run));
-        if(this.getDataGroup().get(run).getGraph("rffADCTimeline_"+run).getVectorX().size()>=2) {
+        this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getH1F("rf2fADCadc-"+run));
+        if(this.getDataGroup().get(run).getGraph("rffADCTimeline-"+run).getVectorX().size()>=2) {
             this.getCalibrationCanvas().getCanvas("RF fADC").cd(5);
-            this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getGraph("rffADCTimeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getGraph("rffADCTimeline-"+run));
         }
         this.getCalibrationCanvas().getCanvas("RF fADC").update();
     }
@@ -356,11 +356,11 @@ public class RFsignals extends CalibrationModule {
                 int     order = bank.getByte("order",i); 
                 if(order==2) {
                     if(comp==1) {
-                        this.getDataGroup().get(run).getH1F("rf1_"+run).fill(TDC*1.0);
+                        this.getDataGroup().get(run).getH1F("rf1-"+run).fill(TDC*1.0);
                         rf1.add(TDC);
                     }
                     else {
-                        this.getDataGroup().get(run).getH1F("rf2_"+run).fill(TDC*1.0);
+                        this.getDataGroup().get(run).getH1F("rf2-"+run).fill(TDC*1.0);
                         rf2.add(TDC);
                     }
                 }
@@ -368,16 +368,16 @@ public class RFsignals extends CalibrationModule {
         }
 //        System.out.println(rf1.size() + " " +rf2.size() + " " + run);
         for(int i=0; i<rf1.size()-1; i++) {
-            this.getDataGroup().get(run).getH1F("rf1rawdiff_"+run).fill((rf1.get(i+1)-rf1.get(i))*1.0);
-            this.getDataGroup().get(run).getH2F("rf1rawdiffrf1_"+run).fill(rf1.get(i),(rf1.get(i+1)-rf1.get(i))*1.0);
-            this.getDataGroup().get(run).getH1F("rf1diff_"+run).fill((rf1.get(i+1)-rf1.get(i))*tdc2time);
-            this.getDataGroup().get(run).getH1F("rf1difftmp_"+run).fill((rf1.get(i+1)-rf1.get(i))*tdc2time);
+            this.getDataGroup().get(run).getH1F("rf1rawdiff-"+run).fill((rf1.get(i+1)-rf1.get(i))*1.0);
+            this.getDataGroup().get(run).getH2F("rf1rawdiffrf1-"+run).fill(rf1.get(i),(rf1.get(i+1)-rf1.get(i))*1.0);
+            this.getDataGroup().get(run).getH1F("rf1diff-"+run).fill((rf1.get(i+1)-rf1.get(i))*tdc2time);
+            this.getDataGroup().get(run).getH1F("rf1difftmp-"+run).fill((rf1.get(i+1)-rf1.get(i))*tdc2time);
         }
         for(int i=0; i<rf2.size()-1; i++) {
-            this.getDataGroup().get(run).getH1F("rf2rawdiff_"+run).fill((rf2.get(i+1)-rf2.get(i))*1.0);
-            this.getDataGroup().get(run).getH2F("rf2rawdiffrf2_"+run).fill(rf2.get(i),(rf2.get(i+1)-rf2.get(i))*1.0);
-            this.getDataGroup().get(run).getH1F("rf2diff_"+run).fill((rf2.get(i+1)-rf2.get(i))*tdc2time);
-            this.getDataGroup().get(run).getH1F("rf2difftmp_"+run).fill((rf2.get(i+1)-rf2.get(i))*tdc2time);
+            this.getDataGroup().get(run).getH1F("rf2rawdiff-"+run).fill((rf2.get(i+1)-rf2.get(i))*1.0);
+            this.getDataGroup().get(run).getH2F("rf2rawdiffrf2-"+run).fill(rf2.get(i),(rf2.get(i+1)-rf2.get(i))*1.0);
+            this.getDataGroup().get(run).getH1F("rf2diff-"+run).fill((rf2.get(i+1)-rf2.get(i))*tdc2time);
+            this.getDataGroup().get(run).getH1F("rf2difftmp-"+run).fill((rf2.get(i+1)-rf2.get(i))*tdc2time);
         }
 
         if(rf1.size()==rf2.size() || true) {
@@ -386,28 +386,28 @@ public class RFsignals extends CalibrationModule {
             int npairs = Math.min(rf1.size(),rf2.size());
             for(int i=0; i<npairs; i++) {
                 double rfTimei = ((rf1.get(i)-rf2.get(i))*tdc2time + (1000*rfbucket)) % rfbucket;
-                this.getDataGroup().get(run).getH1F("rfdiff_"+run).fill(rfTimei);
-                this.getDataGroup().get(run).getH1F("rfdifftmp_"+run).fill(rfTimei);
+                this.getDataGroup().get(run).getH1F("rfdiff-"+run).fill(rfTimei);
+                this.getDataGroup().get(run).getH1F("rfdifftmp-"+run).fill(rfTimei);
                 rfTime1 += ((rf1.get(i)*tdc2time) % period);
                 rfTime2 += ((rf2.get(i)*tdc2time) % period);
             }
             rfTime1 /=npairs;
             rfTime2 /=npairs;            
             double rfTime = (rfTime1-rfTime2 + 1000*rfbucket) % rfbucket;
-            this.getDataGroup().get(run).getH1F("rfdiffAve_"+run).fill(rfTime);
-            this.getDataGroup().get(run).getH1F("rfdiffAvetmp_"+run).fill(rfTime);
-            this.getDataGroup().get(run).getH2F("timeRF1_"+run).fill(rfTime1,rfTime);
-            this.getDataGroup().get(run).getH2F("timeRF2_"+run).fill(rfTime2,rfTime);            
+            this.getDataGroup().get(run).getH1F("rfdiffAve-"+run).fill(rfTime);
+            this.getDataGroup().get(run).getH1F("rfdiffAvetmp-"+run).fill(rfTime);
+            this.getDataGroup().get(run).getH2F("timeRF1-"+run).fill(rfTime1,rfTime);
+            this.getDataGroup().get(run).getH2F("timeRF2-"+run).fill(rfTime2,rfTime);            
         }
-        if(this.getDataGroup().get(run).getH1F("rfdiffAvetmp_"+run).getEntries()>=ntime){
-            H1F rf1diff   = this.getDataGroup().get(run).getH1F("rf1difftmp_"+run);
-            H1F rf2diff   = this.getDataGroup().get(run).getH1F("rf2difftmp_"+run);
-            H1F rfdiff    = this.getDataGroup().get(run).getH1F("rfdifftmp_"+run);
-            H1F rfdiffAve = this.getDataGroup().get(run).getH1F("rfdiffAvetmp_"+run);
-            this.getDataGroup().get(run).getGraph("rf1Timeline_"+run).addPoint(this.getEventNumber(), rf1diff.getMean() , 0, rf1diff.getRMS()/Math.sqrt(rf1diff.getEntries()));
-            this.getDataGroup().get(run).getGraph("rf2Timeline_"+run).addPoint(this.getEventNumber(), rf2diff.getMean() , 0, rf2diff.getRMS()/Math.sqrt(rf2diff.getEntries()));
-            this.getDataGroup().get(run).getGraph("rfTimeline_"+run).addPoint(this.getEventNumber(), rfdiff.getMean() , 0, rfdiff.getRMS()/Math.sqrt(rfdiff.getEntries()));
-            this.getDataGroup().get(run).getGraph("rfAveTimeline_"+run).addPoint(this.getEventNumber(), rfdiffAve.getMean() , 0, rfdiffAve.getRMS()/Math.sqrt(rfdiffAve.getEntries()));
+        if(this.getDataGroup().get(run).getH1F("rfdiffAvetmp-"+run).getEntries()>=ntime){
+            H1F rf1diff   = this.getDataGroup().get(run).getH1F("rf1difftmp-"+run);
+            H1F rf2diff   = this.getDataGroup().get(run).getH1F("rf2difftmp-"+run);
+            H1F rfdiff    = this.getDataGroup().get(run).getH1F("rfdifftmp-"+run);
+            H1F rfdiffAve = this.getDataGroup().get(run).getH1F("rfdiffAvetmp-"+run);
+            this.getDataGroup().get(run).getGraph("rf1Timeline-"+run).addPoint(this.getEventNumber(), rf1diff.getMean() , 0, rf1diff.getRMS()/Math.sqrt(rf1diff.getEntries()));
+            this.getDataGroup().get(run).getGraph("rf2Timeline-"+run).addPoint(this.getEventNumber(), rf2diff.getMean() , 0, rf2diff.getRMS()/Math.sqrt(rf2diff.getEntries()));
+            this.getDataGroup().get(run).getGraph("rfTimeline-"+run).addPoint(this.getEventNumber(), rfdiff.getMean() , 0, rfdiff.getRMS()/Math.sqrt(rfdiff.getEntries()));
+            this.getDataGroup().get(run).getGraph("rfAveTimeline-"+run).addPoint(this.getEventNumber(), rfdiffAve.getMean() , 0, rfdiffAve.getRMS()/Math.sqrt(rfdiffAve.getEntries()));
             rf1diff.reset();
             rf2diff.reset();
             rfdiff.reset();
@@ -429,12 +429,12 @@ public class RFsignals extends CalibrationModule {
                 int     order = bank.getByte("order",i); 
                 if(order==0) {
                     if(comp==3) {
-                        this.getDataGroup().get(run).getH1F("rf1fADC_"+run).fill(time);
+                        this.getDataGroup().get(run).getH1F("rf1fADC-"+run).fill(time);
                         rf1time = time;
                         rf1adc  = adc;
                     }
                     else {
-                        this.getDataGroup().get(run).getH1F("rf2fADC_"+run).fill(time);
+                        this.getDataGroup().get(run).getH1F("rf2fADC-"+run).fill(time);
                         rf2time = time;
                         rf2adc  = adc;
                      }
@@ -442,15 +442,15 @@ public class RFsignals extends CalibrationModule {
             }
             if(rf1time>0 && rf2time>0) {
                 double rftime = (rf1time-rf2time + 1000*rfbucket) % rfbucket;
-                this.getDataGroup().get(run).getH1F("rf1fADCadc_"+run).fill(rf1adc);
-                this.getDataGroup().get(run).getH1F("rf2fADCadc_"+run).fill(rf2adc);
-                this.getDataGroup().get(run).getH1F("rffADCdiff_"+run).fill(rftime);
-                this.getDataGroup().get(run).getH1F("rffADCdifftmp_"+run).fill(rftime);
+                this.getDataGroup().get(run).getH1F("rf1fADCadc-"+run).fill(rf1adc);
+                this.getDataGroup().get(run).getH1F("rf2fADCadc-"+run).fill(rf2adc);
+                this.getDataGroup().get(run).getH1F("rffADCdiff-"+run).fill(rftime);
+                this.getDataGroup().get(run).getH1F("rffADCdifftmp-"+run).fill(rftime);
             }
         }
-        if(this.getDataGroup().get(run).getH1F("rffADCdifftmp_"+run).getEntries()>=ntime){
-            H1F rfdiff    = this.getDataGroup().get(run).getH1F("rffADCdifftmp_"+run);
-            this.getDataGroup().get(run).getGraph("rffADCTimeline_"+run).addPoint(this.getEventNumber(), rfdiff.getMean() , 0, rfdiff.getRMS()/Math.sqrt(rfdiff.getEntries()));
+        if(this.getDataGroup().get(run).getH1F("rffADCdifftmp-"+run).getEntries()>=ntime){
+            H1F rfdiff    = this.getDataGroup().get(run).getH1F("rffADCdifftmp-"+run);
+            this.getDataGroup().get(run).getGraph("rffADCTimeline-"+run).addPoint(this.getEventNumber(), rfdiff.getMean() , 0, rfdiff.getRMS()/Math.sqrt(rfdiff.getEntries()));
             rfdiff.reset();
         }
 
@@ -471,29 +471,29 @@ public class RFsignals extends CalibrationModule {
 //        System.out.println("Updating RF for run " + run);       
         int run = this.getRunNumber();
 
-        if(this.getDataGroup().get(run).getGraph("rf1Timeline_"+run).getVectorX().size()>=2) {
+        if(this.getDataGroup().get(run).getGraph("rf1Timeline-"+run).getVectorX().size()>=2) {
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(0);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf1Timeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf1Timeline-"+run));
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(1);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf2Timeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rf2Timeline-"+run));
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(2);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfTimeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfTimeline-"+run));
             this.getCalibrationCanvas().getCanvas("RF Timeline").cd(3);
-            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfAveTimeline_"+run));               
+            this.getCalibrationCanvas().getCanvas("RF Timeline").draw(this.getDataGroup().get(run).getGraph("rfAveTimeline-"+run));               
         }
-        if(this.getDataGroup().get(run).getGraph("rffADCTimeline_"+run).getVectorX().size()>=2) {
+        if(this.getDataGroup().get(run).getGraph("rffADCTimeline-"+run).getVectorX().size()>=2) {
             this.getCalibrationCanvas().getCanvas("RF fADC").cd(5);
-            this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getGraph("rffADCTimeline_"+run));
+            this.getCalibrationCanvas().getCanvas("RF fADC").draw(this.getDataGroup().get(run).getGraph("rffADCTimeline-"+run));
         }
         
-        this.fitRF(this.getDataGroup().get(run).getH1F("rf1rawdiff_"+run),this.getDataGroup().get(run).getF1D("f1rawdiff_"+run));
-        this.fitRF(this.getDataGroup().get(run).getH1F("rf2rawdiff_"+run),this.getDataGroup().get(run).getF1D("f2rawdiff_"+run));
-        this.fitRF(this.getDataGroup().get(run).getH1F("rf1diff_"+run),   this.getDataGroup().get(run).getF1D("f1diff_"+run));
-        this.fitRF(this.getDataGroup().get(run).getH1F("rf2diff_"+run),   this.getDataGroup().get(run).getF1D("f2diff_"+run));
-        this.fitRF(this.getDataGroup().get(run).getH1F("rfdiff_"+run),    this.getDataGroup().get(run).getF1D("fdiff_"+run));
-        this.fitRF(this.getDataGroup().get(run).getH1F("rfdiffAve_"+run), this.getDataGroup().get(run).getF1D("fdiffAve_"+run));
-        this.fitRF(this.getDataGroup().get(run).getH1F("rffADCdiff_"+run), this.getDataGroup().get(run).getF1D("ffADCdiff_"+run));
-        double rfMean = this.getDataGroup().get(run).getH1F("rfdiffAve_"+run).getMean();
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf1rawdiff-"+run),this.getDataGroup().get(run).getF1D("f1rawdiff-"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf2rawdiff-"+run),this.getDataGroup().get(run).getF1D("f2rawdiff-"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf1diff-"+run),   this.getDataGroup().get(run).getF1D("f1diff-"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rf2diff-"+run),   this.getDataGroup().get(run).getF1D("f2diff-"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rfdiff-"+run),    this.getDataGroup().get(run).getF1D("fdiff-"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rfdiffAve-"+run), this.getDataGroup().get(run).getF1D("fdiffAve-"+run));
+        this.fitRF(this.getDataGroup().get(run).getH1F("rffADCdiff-"+run), this.getDataGroup().get(run).getF1D("ffADCdiff-"+run));
+        double rfMean = this.getDataGroup().get(run).getH1F("rfdiffAve-"+run).getMean();
         if(this.getCalibrationCanvas().getCanvas("RF Time").getPad(3)!=null) this.getCalibrationCanvas().getCanvas("RF Time").getPad(3).getAxisX().setRange(rfMean-0.5,rfMean+0.5);
         if(this.getCalibrationCanvas().getCanvas("RF Time").getPad(4)!=null) this.getCalibrationCanvas().getCanvas("RF Time").getPad(4).getAxisY().setRange(rfMean-0.5,rfMean+0.5);
         if(this.getCalibrationCanvas().getCanvas("RF Time").getPad(5)!=null) this.getCalibrationCanvas().getCanvas("RF Time").getPad(5).getAxisY().setRange(rfMean-0.5,rfMean+0.5);
@@ -517,20 +517,14 @@ public class RFsignals extends CalibrationModule {
     @Override
     public void updateTable(int run) {
         if(!this.getCalibrationTable().hasEntry(0,0,run) )this.getCalibrationTable().addEntry(0,0,run);
-        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("f1rawdiff_"+run).getParameter(1), "\u0394TDC1", 0,0,run);
-        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("f2rawdiff_"+run).getParameter(1), "\u0394TDC2", 0,0,run);
-        this.getCalibrationTable().setDoubleValue(period/this.getDataGroup().get(run).getF1D("f1rawdiff_"+run).getParameter(1), "TDC2Time1", 0,0,run);
-        this.getCalibrationTable().setDoubleValue(period/this.getDataGroup().get(run).getF1D("f2rawdiff_"+run).getParameter(1), "TDC2Time2", 0,0,run);
-        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("fdiff_"+run).getParameter(1), "\u0394RF", 0,0,run);
-        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("fdiffAve_"+run).getParameter(1), "\u0394\u2329RF\u232A", 0,0,run);
-        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("fdiffAve_"+run).getParameter(2), "\u03C3(\u0394\u2329RF\u232A)", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("f1rawdiff-"+run).getParameter(1), "\u0394TDC1", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("f2rawdiff-"+run).getParameter(1), "\u0394TDC2", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(period/this.getDataGroup().get(run).getF1D("f1rawdiff-"+run).getParameter(1), "TDC2Time1", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(period/this.getDataGroup().get(run).getF1D("f2rawdiff-"+run).getParameter(1), "TDC2Time2", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("fdiff-"+run).getParameter(1), "\u0394RF", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("fdiffAve-"+run).getParameter(1), "\u0394\u2329RF\u232A", 0,0,run);
+        this.getCalibrationTable().setDoubleValue(this.getDataGroup().get(run).getF1D("fdiffAve-"+run).getParameter(2), "\u03C3(\u0394\u2329RF\u232A)", 0,0,run);
         getCalibrationTable().fireTableDataChanged();        
     }
     
-//    @Override
-//    public void readDataGroup(TDirectory dir) {
-//    }
-//    @Override
-//    public void writeDataGroup(TDirectory dir) {
-//    }
 }
